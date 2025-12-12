@@ -266,7 +266,7 @@ GET         /rajob/rajobEditPage/:rajobId/:status                               
 POST        /rajob/rajobEditPOST/:rajobId                                                       controllers.RAJobController.rajobEditPOST(rajobId: Long)
 GET         /rajob/rajobApplyPage/:rajobId                                                      controllers.RAJobController.rajobApplyPage(rajobId: Long)
 POST        /rajob/rajobApplyPOST/:rajobId                                                      controllers.RAJobController.rajobApplyPOST(rajobId: Long)
-# GET         /rajob/rajobApplicationList/:pageNum                                                controllers.RAJobController.rajobApplicationList(pageNum: Integer, sortCriteria: String ?= "")
+GET         /rajob/rajobApplicationList/:pageNum                                                controllers.RAJobController.rajobApplicationList(pageNum: Integer, sortCriteria: String ?= "")
 POST        /rajob/rajobStatue/:rajobId/:rajobStatus                                            controllers.RAJobController.rajobStatueChange(rajobId: Long, rajobStatus: String)
 POST        /rajob/rajobApplicationStatusChange/:rajobApplicationId/:rajobApplicationStatus                 controllers.RAJobController.rajobApplicationStatusChange(rajobApplicationId: Long, rajobApplicationStatus: String)
 ##GET         /job/downloadPDFFile/:technologyId                                            controllers.TechnologyController.downloadPDFFile(technologyId: Long)

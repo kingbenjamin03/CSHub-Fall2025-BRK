@@ -211,6 +211,8 @@
                             @if(userTypes == "1" && rajobApplication.getAppliedRAJob.getStatus() !="closed" ) {
                                 <button type="submit" id="RajobOffer" class="btn waves-effect waves-light blue darken-2">
                                     Offer</button>
+                                <a href="@routes.RAJobController.showScheduleInterviewForm(rajobApplication.getId())" class="btn waves-effect waves-light blue darken-2">
+                                    Schedule Interview</a>
                             }
 @*                            <a href="@routes.JobController.jobApplicationsList("rajob", rajobApplication.getAppliedRAJob.getId(), 1, "")" class="btn waves-effect waves-light red darken-2">*@
 @*                                Reject</a>*@
