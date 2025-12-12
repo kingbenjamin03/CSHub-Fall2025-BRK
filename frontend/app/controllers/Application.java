@@ -393,15 +393,9 @@ public class Application extends Controller {
     }
 
     public Result getDefaultAvatar(){
-        try{
-            String base64EncodedData = S3Utils.getObject("user.png", "https://ecopro-aws-bucket.s3.amazonaws.com/" + AWS_FILE_NAME_PREFIX + "/user/user.png");
-            byte[] imageData = Base64.getDecoder().decode(base64EncodedData);
-
-            return ok(imageData).as("image/jpeg");
-        }
-        catch(Exception e){
-            return ok(generalError.render());
-        }
+        // Local-dev friendly: serve a bundled static avatar instead of calling AWS S3.
+        // This avoids failures when AWS credentials are not configured.
+        return redirect("/assets/images/user.png");
     }
 
     /**

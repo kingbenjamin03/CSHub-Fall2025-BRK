@@ -21,7 +21,7 @@ import java.util.Set;
         "candidacies", "followers", "friendRequestSender", "friends",
         "createdProjects"})
 public class Reviewer {
-    public static final String DEFAULT_USER_IMAGE = "../../../../assets/images/user.png";
+    public static final String DEFAULT_USER_IMAGE = "/assets/images/user.png";
     private long id;
 
     private String userAccount; // has to be unique

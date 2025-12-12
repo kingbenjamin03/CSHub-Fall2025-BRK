@@ -531,6 +531,8 @@ create table rajob
     expected_time_duration varchar(255) null,
     rajob_publisher_id     bigint       null,
     number_of_applicants   int          not null,
+    create_time            varchar(255) null,
+    update_time            varchar(255) null,
     constraint fk_rajob_rajob_publisher_id
         foreign key (rajob_publisher_id) references user (id)
 );
