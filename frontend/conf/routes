@@ -295,6 +295,9 @@ POST        /rajob/sendOfferEmail                                               
 # Interview Scheduling Routes
 GET         /rajob/scheduleInterview/:raJobApplicationId                                         controllers.RAJobController.showScheduleInterviewForm(raJobApplicationId: Long)
 POST        /rajob/scheduleInterview/:raJobApplicationId                                         controllers.RAJobController.scheduleInterviewPOST(raJobApplicationId: Long)
+# Backwards-compatible alias (older links/bookmarks)
+GET         /rajob/scheduleInterviewview/:raJobApplicationId                                     controllers.RAJobController.showScheduleInterviewForm(raJobApplicationId: Long)
+POST        /rajob/scheduleInterviewview/:raJobApplicationId                                     controllers.RAJobController.scheduleInterviewPOST(raJobApplicationId: Long)
 GET         /rajob/manageAvailability                                                             controllers.RAJobController.manageAvailability()
 POST        /rajob/manageAvailability                                                             controllers.RAJobController.manageAvailabilityPOST()
 GET         /rajob/interview/:interviewId                                                          controllers.RAJobController.viewInterview(interviewId: Long)
