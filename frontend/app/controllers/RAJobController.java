@@ -1011,7 +1011,10 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result showScheduleInterviewForm(Long raJobApplicationId) {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             String userId = session("id");
             String userTypes = session("userTypes");
@@ -1056,10 +1059,32 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result scheduleInterviewPOST(Long raJobApplicationId) {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             String userId = session("id");
+            String userTypes = session("userTypes");
+
+            // Verify user is faculty (researcher)
+            if (userTypes == null || !userTypes.contains("1")) {
+                return unauthorized("Only faculty members can schedule interviews.");
+            }
             Long facultyId = Long.parseLong(userId);
+
+            // Verify the current user is the faculty member (publisher of the RA job)
+            RAJobApplication application = rajobApplicationService.getRAJobApplicationById(raJobApplicationId);
+            if (application == null) {
+                Logger.debug("RAJobController.scheduleInterviewPOST() application not found");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+            if (application.getAppliedRAJob() == null
+                    || application.getAppliedRAJob().getRajobPublisher() == null
+                    || application.getAppliedRAJob().getRajobPublisher().getId() != facultyId) {
+                return unauthorized("You can only schedule interviews for your own RA job postings.");
+            }
 
             Form<?> form = myFactory.form().bindFromRequest();
             String interviewDateTime = form.field("interviewDateTime").value();
@@ -1070,6 +1095,15 @@ public class RAJobController extends Controller {
             if (interviewDateTime == null || interviewDateTime.isEmpty()) {
                 Application.flashMsg("error", "Interview date and time are required.");
                 return redirect(routes.RAJobController.showScheduleInterviewForm(raJobApplicationId));
+            }
+
+            // UI uses "YYYY-MM-DD HH:MM" (flatpickr: "Y-m-d H:i"), backend expects seconds.
+            // Normalize common cases to "YYYY-MM-DD HH:MM:SS".
+            String dt = interviewDateTime.trim();
+            if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$", dt)) {
+                interviewDateTime = dt + ":00";
+            } else if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$", dt)) {
+                interviewDateTime = dt.replace('T', ' ') + ":00";
             }
 
             RAInterview interview = raInterviewService.scheduleInterview(
@@ -1101,7 +1135,10 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result manageAvailability() {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             String userId = session("id");
             String userTypes = session("userTypes");
@@ -1130,7 +1167,10 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result manageAvailabilityPOST() {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             String userId = session("id");
             Long facultyId = Long.parseLong(userId);
