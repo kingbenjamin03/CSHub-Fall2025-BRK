@@ -98,6 +98,8 @@ GET         /challenge/challengeApplicationsDetail/:challengeApplicationId      
 GET         /challenge/challengeList/:pageNum                                                controllers.ChallengeController.challengeList(pageNum: Integer, sortCriteria: String ?= "")
 GET         /challenge/challengeListAdmin/:pageNum                                           controllers.ChallengeController.challengeListAdmin(pageNum: Integer, sortCriteria: String ?= "")
 GET         /challenge/challengeDetail/:challengeId                                          controllers.ChallengeController.challengeDetail(challengeId: Long)
+GET         /challenge/searchPage                                                            controllers.ChallengeController.searchPage()
+POST        /challenge/searchPOST                                                            controllers.ChallengeController.searchPOST(pageNum: Integer, sortCriteria: String)
 
 ########################################################## User Message #####################################################################
 GET         /message/list/:pageNum                                                           controllers.UserMessageController.listPage(pageNum: Integer)
@@ -289,6 +291,18 @@ GET         /rajob/closeRAJob/:rajobId                                          
 
 # GET        /rajob/offer/sendOffer/:rajobId/:recipientId                                      controllers.RAJobController.sendOfferEmail(rajobId: String, recipientId: String)
 POST        /rajob/sendOfferEmail                                                               controllers.RAJobController.sendOfferEmail(rajobApplicationId:Long, ccString:String)
+
+# Interview Scheduling Routes
+GET         /rajob/scheduleInterview/:raJobApplicationId                                         controllers.RAJobController.showScheduleInterviewForm(raJobApplicationId: Long)
+POST        /rajob/scheduleInterview/:raJobApplicationId                                         controllers.RAJobController.scheduleInterviewPOST(raJobApplicationId: Long)
+GET         /rajob/manageAvailability                                                             controllers.RAJobController.manageAvailability()
+POST        /rajob/manageAvailability                                                             controllers.RAJobController.manageAvailabilityPOST()
+GET         /rajob/interview/:interviewId                                                          controllers.RAJobController.viewInterview(interviewId: Long)
+GET         /rajob/interview/:interviewId/reschedule                                               controllers.RAJobController.rescheduleInterview(interviewId: Long)
+POST        /rajob/interview/:interviewId/reschedule                                               controllers.RAJobController.rescheduleInterviewPOST(interviewId: Long)
+POST        /rajob/interview/:interviewId/cancel                                                   controllers.RAJobController.cancelInterview(interviewId: Long)
+GET         /rajob/interview/:interviewId/studentResponse                                          controllers.RAJobController.studentInterviewResponse(interviewId: Long)
+POST        /rajob/interview/:interviewId/studentResponse                                         controllers.RAJobController.studentInterviewResponsePOST(interviewId: Long)
 
 ########################################################## RAJobs #####################################################################
 

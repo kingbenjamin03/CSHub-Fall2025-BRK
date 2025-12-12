@@ -1,5 +1,5 @@
-# Use OpenJDK 8 to run Play backend
-FROM openjdk:8-jdk-slim
+# Use Eclipse Temurin (OpenJDK) 8 to run Play backend
+FROM eclipse-temurin:8-jdk
 
 # Set working directory
 WORKDIR /app
@@ -14,11 +14,19 @@ RUN apt-get update && \
     apt-get install -y sbt=1.5.5 && \
     apt-get clean
 
-# Copy the project files into the container
+# Copy build configuration files first (for better Docker layer caching)
+COPY build.sbt /app/
+COPY project/ /app/project/
+
+# Download dependencies (this layer will be cached unless build files change)
+# Using -batch to disable interactive mode and show progress
+RUN sbt -batch update || true
+
+# Copy the rest of the source code
 COPY . /app
 
-# Build the distribution package
-RUN sbt dist
+# Build the distribution package (using -batch for non-interactive mode)
+RUN sbt -batch dist
 
 # Unpack the distribution package
 RUN unzip target/universal/*.zip -d /app

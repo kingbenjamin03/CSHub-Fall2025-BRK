@@ -27,6 +27,18 @@
                         <h5>Your TA Job Application (ID: @id) has been successfully offered.</h5>
                     }@if(editType=="RajobOffer"){
                         <h5>Your RA Job Application (ID: @id) has been successfully offered.</h5>
+                    }@if(editType=="InterviewScheduled"){
+                        <h5>Interview has been successfully scheduled for RA Job Application (ID: @id).</h5>
+                        <p>The applicant has been notified via email.</p>
+                    }@if(editType=="InterviewRescheduled"){
+                        <h5>Interview (ID: @entryId) has been successfully rescheduled for RA Job Application (ID: @id).</h5>
+                        <p>Both the applicant and faculty have been notified via email.</p>
+                    }@if(editType=="InterviewCanceled"){
+                        <h5>Interview (ID: @entryId) has been successfully canceled for RA Job Application (ID: @id).</h5>
+                        <p>The applicant has been notified via email.</p>
+                    }@if(editType=="StudentResponse"){
+                        <h5>Your response to Interview (ID: @entryId) has been successfully submitted for RA Job Application (ID: @id).</h5>
+                        <p>The faculty member has been notified via email.</p>
                     }@if(editType=="JobOffer"){
                         <h5>Your Job Application (ID: @id) has been successfully offered.</h5>
                     }@if(editType=="ChallengeOffer"){

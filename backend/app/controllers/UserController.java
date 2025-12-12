@@ -94,59 +94,91 @@ public class UserController extends Controller {
     public Result addUser() {
         JsonNode json = request().body().asJson();
         if (json == null) {
+            Logger.error("UserController.addUser(): Request body is null");
             return Common.badRequestWrapper("User not created, expecting Json data");
         }
-        Gson gson = new Gson();
-
-        String userName = json.path("userName").asText();
-        String password = MD5Hashing(json.path("password").asText());
-        String firstName = json.path("firstName").asText();
-        String lastName = json.path("lastName").asText();
-        String middleInitial = json.path("middleInitial").asText();
-        String organization = json.path("organization").asText();
-        String email = json.path("email").asText();
-        String mailingAddress = json.path("mailingAddress").asText();
-        String phoneNumber = json.path("phoneNumber").asText();
-        String researchFields = json.path("researchFields").asText();
-        String highestDegree = json.path("highestDegree").asText();
-        String mood = json.path("mood").asText();
-
-        Integer userType = Integer.parseInt(json.path("hiddenUserType").asText());
-        String orcid = json.path("orcid").asText();
-        String school = json.path("school").asText();
-        String department = json.path("department").asText();
-
-        String studentIdNumber = json.path("studentIdNumber").asText();
-        String studentType = json.path("studentType").asText();
-        String studentYear = json.path("studentYear").asText();
-        String studentMajor = json.path("studentMajor").asText();
-        String studentEnrollDate = json.path("studentEnrollDate").asText();
-
-        String hiddenOrganization = json.path("hiddenOrganization").asText();
-
-        User user = new User(userName, password, firstName,
-                lastName, middleInitial, organization, email, mailingAddress,
-                phoneNumber, "normal");
-
-        user.setMood(mood);
-        String homepage = json.path("homepage").asText();
-        user.setHomepage(homepage);
-        Logger.debug("Homepage received from request: " + homepage);
-
-        user.setUserType(userType);
-        user.setIsActive("True");
-        user.setCreateTime(new Date().toString());
+        
+        Logger.debug("UserController.addUser(): Received JSON: " + json.toString());
 
         try {
+            String userName = json.path("userName").asText();
+            String password = json.path("password").asText();
+            if (password == null || password.isEmpty()) {
+                Logger.error("UserController.addUser(): Password is missing or empty");
+                return Common.badRequestWrapper("Password is required");
+            }
+            password = MD5Hashing(password);
+            
+            String firstName = json.path("firstName").asText();
+            String lastName = json.path("lastName").asText();
+            String middleInitial = json.path("middleInitial").asText();
+            String organization = json.path("organization").asText();
+            String email = json.path("email").asText();
+            if (email == null || email.isEmpty()) {
+                Logger.error("UserController.addUser(): Email is missing or empty");
+                return Common.badRequestWrapper("Email is required");
+            }
+            String mailingAddress = json.path("mailingAddress").asText();
+            String phoneNumber = json.path("phoneNumber").asText();
+            String researchFields = json.path("researchFields").asText();
+            String highestDegree = json.path("highestDegree").asText();
+            String mood = json.path("mood").asText();
+
+            // Safely parse userType with validation
+            String userTypeStr = json.path("hiddenUserType").asText();
+            if (userTypeStr == null || userTypeStr.isEmpty()) {
+                Logger.error("UserController.addUser(): hiddenUserType is missing or empty");
+                return Common.badRequestWrapper("User type is required");
+            }
+            
+            Integer userType;
+            try {
+                userType = Integer.parseInt(userTypeStr);
+            } catch (NumberFormatException e) {
+                Logger.error("UserController.addUser(): Invalid userType format: " + userTypeStr);
+                return Common.badRequestWrapper("Invalid user type format");
+            }
+            
+            String orcid = json.path("orcid").asText();
+            String school = json.path("school").asText();
+            String department = json.path("department").asText();
+
+            String studentIdNumber = json.path("studentIdNumber").asText();
+            String studentType = json.path("studentType").asText();
+            String studentYear = json.path("studentYear").asText();
+            String studentMajor = json.path("studentMajor").asText();
+            String studentEnrollDate = json.path("studentEnrollDate").asText();
+
+            String hiddenOrganization = json.path("hiddenOrganization").asText();
+
+            User user = new User(userName, password, firstName,
+                    lastName, middleInitial, organization, email, mailingAddress,
+                    phoneNumber, "normal");
+
+            user.setMood(mood);
+            String homepage = json.path("homepage").asText();
+            user.setHomepage(homepage);
+            Logger.debug("UserController.addUser(): Homepage received from request: " + homepage);
+
+            user.setUserType(userType);
+            user.setIsActive("True");
+            user.setCreateTime(new Date().toString());
+
+            // Check if email already exists
             if ((User.find.query().where().eq("is_active", "True").eq("email",
                     user.getEmail()).findList()).size() != 0) {
+                Logger.warn("UserController.addUser(): Email already exists: " + email);
                 return Common.badRequestWrapper("Email has been used");
             }
+            
+            Logger.debug("UserController.addUser(): Attempting to save user with email: " + email);
             user.save();
             user.updateOrganization(organization, hiddenOrganization);
             user.save();
+            Logger.debug("UserController.addUser(): User saved successfully with id: " + user.getId());
 
             if (user.isResearcher()) {
+                Logger.debug("UserController.addUser(): Creating ResearcherInfo for user: " + user.getId());
                 ResearcherInfo researcherInfo = new ResearcherInfo(user, researchFields,
                         highestDegree, orcid, school, department);
                 researcherInfo.save();
@@ -156,6 +188,7 @@ public class UserController extends Controller {
                 user.save();
             }
             if (user.isStudent()) {
+                Logger.debug("UserController.addUser(): Creating StudentInfo for user: " + user.getId());
                 StudentInfo studentInfo = new StudentInfo(user, studentIdNumber, studentYear, studentType, studentMajor, studentEnrollDate);
                 studentInfo.save();
                 user.setStudentInfo(studentInfo);
@@ -167,11 +200,13 @@ public class UserController extends Controller {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode node = mapper.createObjectNode();
             node.put("id", user.getId());
+            Logger.info("UserController.addUser(): Successfully created user with id: " + user.getId());
             return ok(node);
         } catch (Exception e) {
             e.printStackTrace();
-            Logger.debug("UserController.addUser() exception " + e.toString());
-            return notFound("User not added");
+            Logger.error("UserController.addUser() exception: " + e.toString());
+            Logger.error("Exception stack trace: ", e);
+            return Common.badRequestWrapper("User not added: " + e.getMessage());
         }
     }
     /********************************************** End of Add User ***************************************************/

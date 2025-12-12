@@ -1,0 +1,216 @@
+@import java.util
+@(availabilitySlots: util.List[FacultyAvailability], scheduledInterviews: util.List[RAInterview], facultyId: Long)
+@import helper._
+
+@scripts = {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        .availability-slot {
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .scheduled-interview {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 4px solid #ff9800;
+            background-color: #fff3e0;
+        }
+        .conflict-warning {
+            color: #f44336;
+            font-weight: bold;
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // Initialize Flatpickr for date and time ranges
+            flatpickr("#addStartTime", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                time_24hr: true,
+                minDate: "today"
+            });
+
+            flatpickr("#addEndTime", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                time_24hr: true,
+                minDate: "today"
+            });
+
+            // Edit slot handlers
+            $(".edit-slot-btn").click(function() {
+                var slotId = $(this).data("slot-id");
+                var startTime = $(this).data("start-time");
+                var endTime = $(this).data("end-time");
+                
+                $("#editSlotId").val(slotId);
+                $("#editStartTime").val(startTime);
+                $("#editEndTime").val(endTime);
+                
+                flatpickr("#editStartTime", {
+                    enableTime: true,
+                    dateFormat: "Y-m-d H:i",
+                    time_24hr: true,
+                    minDate: "today"
+                });
+
+                flatpickr("#editEndTime", {
+                    enableTime: true,
+                    dateFormat: "Y-m-d H:i",
+                    time_24hr: true,
+                    minDate: "today"
+                });
+                
+                $("#editSlotModal").modal("open");
+            });
+
+            $(".delete-slot-btn").click(function() {
+                var slotId = $(this).data("slot-id");
+                if (confirm("Are you sure you want to delete this availability slot?")) {
+                    $("#deleteSlotId").val(slotId);
+                    $("#deleteSlotForm").submit();
+                }
+            });
+        });
+    </script>
+}
+
+@main("Manage Availability", scripts) {
+    <div class="container">
+        <div class="row">
+            <div class="col s12 m10 offset-m1">
+                <div class="card-panel">
+                    <h4 class="center">Manage Your Availability</h4>
+
+                    <div class="row">
+                        <div class="col s12">
+                            <h5>Add New Availability Slot</h5>
+                            @helper.form(action = routes.RAJobController.manageAvailabilityPOST(), 'class -> "col s12") {
+                                <input type="hidden" name="action" value="add">
+                                
+                                <div class="row">
+                                    <div class="input-field col s12 m5">
+                                        <input type="text" id="addStartTime" name="startTime" class="validate" required>
+                                        <label for="addStartTime">Start Time (YYYY-MM-DD HH:MM)</label>
+                                    </div>
+                                    <div class="input-field col s12 m5">
+                                        <input type="text" id="addEndTime" name="endTime" class="validate" required>
+                                        <label for="addEndTime">End Time (YYYY-MM-DD HH:MM)</label>
+                                    </div>
+                                    <div class="input-field col s12 m2">
+                                        <button type="submit" class="btn waves-effect waves-light green">
+                                            Add Slot
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col s12">
+                            <h5>Your Availability Slots</h5>
+                            @if(availabilitySlots == null || availabilitySlots.isEmpty()) {
+                                <p>No availability slots defined. Add slots above to make yourself available for interviews.</p>
+                            } else {
+                                @for(slot <- availabilitySlots) {
+                                    <div class="availability-slot">
+                                        <div class="row">
+                                            <div class="col s12 m8">
+                                                <strong>Start:</strong> @slot.getStartTime()<br>
+                                                <strong>End:</strong> @slot.getEndTime()<br>
+                                                <strong>Status:</strong> 
+                                                @if(slot.getIsAvailable()) {
+                                                    <span class="green-text">Available</span>
+                                                } else {
+                                                    <span class="red-text">Unavailable</span>
+                                                }
+                                            </div>
+                                            <div class="col s12 m4 right-align">
+                                                <button class="btn-small waves-effect waves-light blue edit-slot-btn" 
+                                                        data-slot-id="@slot.getId()"
+                                                        data-start-time="@slot.getStartTime()"
+                                                        data-end-time="@slot.getEndTime()">
+                                                    Edit
+                                                </button>
+                                                <button class="btn-small waves-effect waves-light red delete-slot-btn" 
+                                                        data-slot-id="@slot.getId()">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    @if(scheduledInterviews != null && !scheduledInterviews.isEmpty()) {
+                        <div class="row">
+                            <div class="col s12">
+                                <h5>Scheduled Interviews</h5>
+                                <p>These interviews are already scheduled and may conflict with availability slots.</p>
+                                @for(interview <- scheduledInterviews) {
+                                    <div class="scheduled-interview">
+                                        <strong>Date & Time:</strong> @interview.getInterviewDate() @interview.getInterviewTime()<br>
+                                        <strong>Applicant:</strong> @interview.getApplicant().getFirstName() @interview.getApplicant().getLastName()<br>
+                                        <strong>Status:</strong> @interview.getStatus()<br>
+                                        <a href="@routes.RAJobController.viewInterview(interview.getId())" class="btn-small waves-effect waves-light blue">View Details</a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col s12 center">
+                            <a href="@routes.RAJobController.rajobList(1, "")" class="btn waves-effect waves-light grey">
+                                Back to RA Jobs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Slot Modal -->
+    <div id="editSlotModal" class="modal">
+        <div class="modal-content">
+            <h4>Edit Availability Slot</h4>
+            @helper.form(action = routes.RAJobController.manageAvailabilityPOST(), 'class -> "col s12") {
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" id="editSlotId" name="slotId" value="">
+                
+                <div class="row">
+                    <div class="input-field col s12 m6">
+                        <input type="text" id="editStartTime" name="startTime" class="validate" required>
+                        <label for="editStartTime">Start Time (YYYY-MM-DD HH:MM)</label>
+                    </div>
+                    <div class="input-field col s12 m6">
+                        <input type="text" id="editEndTime" name="endTime" class="validate" required>
+                        <label for="editEndTime">End Time (YYYY-MM-DD HH:MM)</label>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col s12">
+                        <button type="submit" class="btn waves-effect waves-light blue">Update Slot</button>
+                        <a href="#!" class="modal-close btn waves-effect waves-light grey">Cancel</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Delete Slot Form (hidden) -->
+    @helper.form(action = routes.RAJobController.manageAvailabilityPOST(), 'id -> "deleteSlotForm", 'class -> "col s12") {
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" id="deleteSlotId" name="slotId" value="">
+    }
+}
+

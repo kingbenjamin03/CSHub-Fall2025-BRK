@@ -11,7 +11,6 @@ import models.JobApplication;
 import models.RAJob;
 import models.RAJobApplication;
 import play.Logger;
-import play.data.DynamicForm;
 import play.data.Form;
 import play.data.FormFactory;
 import play.libs.Json;
@@ -24,6 +23,8 @@ import utils.Common;
 import utils.Constants;
 import utils.RESTfulCalls;
 import views.html.*;
+import models.FacultyAvailability;
+import models.RAInterview;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -55,6 +56,8 @@ public class RAJobController extends Controller {
     private Form<RAJobApplication> rajobApplicationFormTemplate;
     private FormFactory myFactory;
     private final FileService fileService;
+    private final FacultyAvailabilityService facultyAvailabilityService;
+    private final RAInterviewService raInterviewService;
 
 
     /******************************* Constructor **********************************************************************/
@@ -64,7 +67,9 @@ public class RAJobController extends Controller {
                            UserService userService,
                            RAJobApplicationService rajobApplicationService,
                            AccessTimesService accessTimesService,
-                           FileService fileService) {
+                           FileService fileService,
+                           FacultyAvailabilityService facultyAvailabilityService,
+                           RAInterviewService raInterviewService) {
         rajobFormTemplate = factory.form(RAJob.class);
         myFactory = factory;
         rajobApplicationFormTemplate = factory.form(RAJobApplication.class);
@@ -74,6 +79,8 @@ public class RAJobController extends Controller {
         this.userService = userService;
         this.accessTimesService = accessTimesService;
         this.fileService = fileService;
+        this.facultyAvailabilityService = facultyAvailabilityService;
+        this.raInterviewService = raInterviewService;
     }
 
 
@@ -916,4 +923,437 @@ public class RAJobController extends Controller {
             return ok(editError.render("RAJobapplication"));
         }
     }
+
+    /************************************************** Interview Scheduling ******************************************/
+
+    /**
+     * Show the schedule interview form for a specific RA job application
+     *
+     * @param raJobApplicationId the RA job application ID
+     * @return schedule interview form page
+     */
+    @With(OperationLoggingAction.class)
+    public Result showScheduleInterviewForm(Long raJobApplicationId) {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            String userTypes = session("userTypes");
+            
+            // Verify user is faculty (researcher)
+            if (userTypes == null || !userTypes.contains("1")) {
+                return unauthorized("Only faculty members can schedule interviews.");
+            }
+
+            RAJobApplication application = rajobApplicationService.getRAJobApplicationById(raJobApplicationId);
+            if (application == null) {
+                Logger.debug("RAJobController.showScheduleInterviewForm() application not found");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+
+            // Verify the current user is the faculty member (publisher of the RA job)
+            Long facultyId = Long.parseLong(userId);
+            if (application.getAppliedRAJob().getRajobPublisher().getId() != facultyId) {
+                return unauthorized("You can only schedule interviews for your own RA job postings.");
+            }
+
+            // Get faculty availability slots
+            List<FacultyAvailability> availabilitySlots = facultyAvailabilityService.getFacultyAvailability(facultyId);
+            
+            // Get existing interviews for this application
+            List<RAInterview> existingInterviews = raInterviewService.getInterviewsByApplicationId(raJobApplicationId);
+
+            return ok(scheduleInterview.render(application, availabilitySlots, existingInterviews, facultyId));
+        } catch (Exception e) {
+            Logger.error("RAJobController.showScheduleInterviewForm() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(generalError.render());
+        }
+    }
+
+    /**
+     * Handle schedule interview form submission
+     *
+     * @param raJobApplicationId the RA job application ID
+     * @return confirmation or error page
+     */
+    @With(OperationLoggingAction.class)
+    public Result scheduleInterviewPOST(Long raJobApplicationId) {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            Long facultyId = Long.parseLong(userId);
+
+            Form<?> form = myFactory.form().bindFromRequest();
+            String interviewDateTime = form.field("interviewDateTime").value();
+            String meetingLink = form.field("meetingLink").value();
+            String location = form.field("location").value();
+            String notes = form.field("notes").value();
+
+            if (interviewDateTime == null || interviewDateTime.isEmpty()) {
+                Application.flashMsg("error", "Interview date and time are required.");
+                return redirect(routes.RAJobController.showScheduleInterviewForm(raJobApplicationId));
+            }
+
+            RAInterview interview = raInterviewService.scheduleInterview(
+                    raJobApplicationId,
+                    facultyId,
+                    interviewDateTime,
+                    meetingLink,
+                    location,
+                    notes
+            );
+
+            if (interview == null) {
+                Application.flashMsg("error", "Failed to schedule interview. Please check the time and try again.");
+                return redirect(routes.RAJobController.showScheduleInterviewForm(raJobApplicationId));
+            }
+
+            return ok(editConfirmation.render(raJobApplicationId, interview.getId(), "InterviewScheduled"));
+        } catch (Exception e) {
+            Logger.error("RAJobController.scheduleInterviewPOST() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(editError.render("InterviewScheduling"));
+        }
+    }
+
+    /**
+     * Show faculty availability management page
+     *
+     * @return availability management page
+     */
+    @With(OperationLoggingAction.class)
+    public Result manageAvailability() {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            String userTypes = session("userTypes");
+            
+            // Verify user is faculty (researcher)
+            if (userTypes == null || !userTypes.contains("1")) {
+                return unauthorized("Only faculty members can manage availability.");
+            }
+
+            Long facultyId = Long.parseLong(userId);
+            List<FacultyAvailability> availabilitySlots = facultyAvailabilityService.getFacultyAvailability(facultyId);
+            List<RAInterview> scheduledInterviews = raInterviewService.getInterviewsByFacultyId(facultyId);
+
+            return ok(facultyAvailabilityManagement.render(availabilitySlots, scheduledInterviews, facultyId));
+        } catch (Exception e) {
+            Logger.error("RAJobController.manageAvailability() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(generalError.render());
+        }
+    }
+
+    /**
+     * Handle availability management form submission (add/update/delete slots)
+     *
+     * @return confirmation or redirect
+     */
+    @With(OperationLoggingAction.class)
+    public Result manageAvailabilityPOST() {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            Long facultyId = Long.parseLong(userId);
+
+            Form<?> form = myFactory.form().bindFromRequest();
+            String action = form.field("action").value();
+
+            if ("add".equals(action)) {
+                String startTime = form.field("startTime").value();
+                String endTime = form.field("endTime").value();
+                
+                if (startTime == null || endTime == null || startTime.isEmpty() || endTime.isEmpty()) {
+                    Application.flashMsg("error", "Start time and end time are required.");
+                    return redirect(routes.RAJobController.manageAvailability());
+                }
+
+                FacultyAvailability availability = facultyAvailabilityService.addAvailabilitySlot(
+                        facultyId, startTime, endTime);
+                if (availability == null) {
+                    Application.flashMsg("error", "Failed to add availability slot. Please check the times and try again.");
+                } else {
+                    Application.flashMsg("success", "Availability slot added successfully.");
+                }
+            } else if ("update".equals(action)) {
+                String slotIdStr = form.field("slotId").value();
+                String startTime = form.field("startTime").value();
+                String endTime = form.field("endTime").value();
+                
+                if (slotIdStr == null || startTime == null || endTime == null) {
+                    Application.flashMsg("error", "Slot ID, start time, and end time are required.");
+                    return redirect(routes.RAJobController.manageAvailability());
+                }
+
+                Long slotId = Long.parseLong(slotIdStr);
+                FacultyAvailability availability = facultyAvailabilityService.updateAvailabilitySlot(
+                        slotId, startTime, endTime);
+                if (availability == null) {
+                    Application.flashMsg("error", "Failed to update availability slot.");
+                } else {
+                    Application.flashMsg("success", "Availability slot updated successfully.");
+                }
+            } else if ("delete".equals(action)) {
+                String slotIdStr = form.field("slotId").value();
+                if (slotIdStr == null) {
+                    Application.flashMsg("error", "Slot ID is required.");
+                    return redirect(routes.RAJobController.manageAvailability());
+                }
+
+                Long slotId = Long.parseLong(slotIdStr);
+                boolean deleted = facultyAvailabilityService.deleteAvailabilitySlot(slotId);
+                if (!deleted) {
+                    Application.flashMsg("error", "Failed to delete availability slot. It may be in use by scheduled interviews.");
+                } else {
+                    Application.flashMsg("success", "Availability slot deleted successfully.");
+                }
+            }
+
+            return redirect(routes.RAJobController.manageAvailability());
+        } catch (Exception e) {
+            Logger.error("RAJobController.manageAvailabilityPOST() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(editError.render("AvailabilityManagement"));
+        }
+    }
+
+    /**
+     * View interview details
+     *
+     * @param interviewId the interview ID
+     * @return interview detail page
+     */
+    @With(OperationLoggingAction.class)
+    public Result viewInterview(Long interviewId) {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            String userTypes = session("userTypes");
+
+            RAInterview interview = raInterviewService.getInterviewDetails(interviewId);
+            if (interview == null) {
+                Logger.debug("RAJobController.viewInterview() interview not found");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+
+            Long currentUserId = Long.parseLong(userId);
+            boolean isFaculty = userTypes != null && userTypes.contains("1");
+            boolean isApplicant = interview.getApplicant().getId() == currentUserId;
+            boolean isOwner = isFaculty && interview.getFaculty().getId() == currentUserId;
+
+            return ok(interviewDetail.render(interview, currentUserId, isOwner, isApplicant));
+        } catch (Exception e) {
+            Logger.error("RAJobController.viewInterview() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(generalError.render());
+        }
+    }
+
+    /**
+     * Show reschedule interview form
+     *
+     * @param interviewId the interview ID
+     * @return reschedule form page
+     */
+    @With(OperationLoggingAction.class)
+    public Result rescheduleInterview(Long interviewId) {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            Long facultyId = Long.parseLong(userId);
+
+            RAInterview interview = raInterviewService.getInterviewDetails(interviewId);
+            if (interview == null) {
+                Logger.debug("RAJobController.rescheduleInterview() interview not found");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+
+            // Verify user is the faculty member
+            if (interview.getFaculty().getId() != facultyId) {
+                return unauthorized("You can only reschedule your own interviews.");
+            }
+
+            List<FacultyAvailability> availabilitySlots = facultyAvailabilityService.getFacultyAvailability(facultyId);
+
+            return ok(rescheduleInterview.render(interview, availabilitySlots));
+        } catch (Exception e) {
+            Logger.error("RAJobController.rescheduleInterview() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(generalError.render());
+        }
+    }
+
+    /**
+     * Handle reschedule interview form submission
+     *
+     * @param interviewId the interview ID
+     * @return confirmation or error page
+     */
+    @With(OperationLoggingAction.class)
+    public Result rescheduleInterviewPOST(Long interviewId) {
+        checkLoginStatus();
+        try {
+            Form<?> form = myFactory.form().bindFromRequest();
+            String newDateTime = form.field("newDateTime").value();
+            String meetingLink = form.field("meetingLink").value();
+            String location = form.field("location").value();
+
+            if (newDateTime == null || newDateTime.isEmpty()) {
+                Application.flashMsg("error", "New interview date and time are required.");
+                return redirect(routes.RAJobController.rescheduleInterview(interviewId));
+            }
+
+            RAInterview interview = raInterviewService.rescheduleInterview(
+                    interviewId, newDateTime, meetingLink, location);
+
+            if (interview == null) {
+                Application.flashMsg("error", "Failed to reschedule interview. Please check the time and try again.");
+                return redirect(routes.RAJobController.rescheduleInterview(interviewId));
+            }
+
+            return ok(editConfirmation.render(interview.getRaJobApplication().getId(), interviewId, "InterviewRescheduled"));
+        } catch (Exception e) {
+            Logger.error("RAJobController.rescheduleInterviewPOST() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(editError.render("InterviewRescheduling"));
+        }
+    }
+
+    /**
+     * Cancel an interview
+     *
+     * @param interviewId the interview ID
+     * @return confirmation or error page
+     */
+    @With(OperationLoggingAction.class)
+    public Result cancelInterview(Long interviewId) {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            Long facultyId = Long.parseLong(userId);
+
+            RAInterview interview = raInterviewService.getInterviewDetails(interviewId);
+            if (interview == null) {
+                Logger.debug("RAJobController.cancelInterview() interview not found");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+
+            // Verify user is the faculty member
+            if (interview.getFaculty().getId() != facultyId) {
+                return unauthorized("You can only cancel your own interviews.");
+            }
+
+            Form<?> form = myFactory.form().bindFromRequest();
+            String reason = form.field("reason").value();
+
+            RAInterview canceledInterview = raInterviewService.cancelInterview(interviewId, reason);
+            if (canceledInterview == null) {
+                Application.flashMsg("error", "Failed to cancel interview.");
+                return redirect(routes.RAJobController.viewInterview(interviewId));
+            }
+
+            return ok(editConfirmation.render(interview.getRaJobApplication().getId(), interviewId, "InterviewCanceled"));
+        } catch (Exception e) {
+            Logger.error("RAJobController.cancelInterview() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(editError.render("InterviewCancellation"));
+        }
+    }
+
+    /**
+     * Show student interview response page
+     *
+     * @param interviewId the interview ID
+     * @return student response page
+     */
+    @With(OperationLoggingAction.class)
+    public Result studentInterviewResponse(Long interviewId) {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            Long applicantId = Long.parseLong(userId);
+
+            RAInterview interview = raInterviewService.getInterviewDetails(interviewId);
+            if (interview == null) {
+                Logger.debug("RAJobController.studentInterviewResponse() interview not found");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+
+            // Verify user is the applicant
+            if (interview.getApplicant().getId() != applicantId) {
+                return unauthorized("You can only respond to your own interviews.");
+            }
+
+            return ok(studentInterviewResponse.render(interview));
+        } catch (Exception e) {
+            Logger.error("RAJobController.studentInterviewResponse() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(generalError.render());
+        }
+    }
+
+    /**
+     * Handle student interview response submission
+     *
+     * @param interviewId the interview ID
+     * @return confirmation or error page
+     */
+    @With(OperationLoggingAction.class)
+    public Result studentInterviewResponsePOST(Long interviewId) {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            Long applicantId = Long.parseLong(userId);
+
+            RAInterview interview = raInterviewService.getInterviewDetails(interviewId);
+            if (interview == null) {
+                Logger.debug("RAJobController.studentInterviewResponsePOST() interview not found");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+
+            // Verify user is the applicant
+            if (interview.getApplicant().getId() != applicantId) {
+                return unauthorized("You can only respond to your own interviews.");
+            }
+
+            Form<?> form = myFactory.form().bindFromRequest();
+            String response = form.field("response").value();
+
+            if (response == null || response.isEmpty()) {
+                Application.flashMsg("error", "Please select a response.");
+                return redirect(routes.RAJobController.studentInterviewResponse(interviewId));
+            }
+
+            RAInterview updatedInterview = raInterviewService.submitStudentResponse(interviewId, response);
+            if (updatedInterview == null) {
+                Application.flashMsg("error", "Failed to submit response.");
+                return redirect(routes.RAJobController.studentInterviewResponse(interviewId));
+            }
+
+            String message = "Response submitted successfully.";
+            if ("accepted".equals(response)) {
+                message = "Interview accepted! The interview has been confirmed.";
+            } else if ("declined".equals(response)) {
+                message = "Interview declined.";
+            } else if ("reschedule_requested".equals(response)) {
+                message = "Reschedule request submitted. The faculty member will be notified.";
+            }
+
+            Application.flashMsg("success", message);
+            return ok(editConfirmation.render(interview.getRaJobApplication().getId(), interviewId, "StudentResponse"));
+        } catch (Exception e) {
+            Logger.error("RAJobController.studentInterviewResponsePOST() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(editError.render("StudentResponse"));
+        }
+    }
+
+    /************************************************** End of Interview Scheduling ***********************************/
 }

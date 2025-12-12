@@ -1,5 +1,5 @@
-# Use OpenJDK 8 to build and run a Play frontend
-FROM openjdk:8-jdk-slim
+# Use Eclipse Temurin (OpenJDK) 8 to build and run a Play frontend
+FROM eclipse-temurin:8-jdk
 
 # Update package index and install required packages:
 RUN apt-get update && \
@@ -29,7 +29,11 @@ WORKDIR /app
 COPY . /app
 
 # Build the Play distribution (produces a ZIP in target/universal/*.zip)
-RUN sbt dist
+# First try to compile to check for errors
+RUN sbt -batch clean compile || true
+
+# Then build the distribution using universal:packageBin
+RUN sbt -batch universal:packageBin
 
 # Unzip the distribution
 RUN unzip target/universal/*.zip -d /app

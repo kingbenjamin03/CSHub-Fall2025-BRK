@@ -1,0 +1,174 @@
+@(interview: RAInterview)
+@import helper._
+
+@scripts = {
+    <style>
+        .interview-summary {
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .response-option {
+            padding: 20px;
+            margin: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .response-option:hover {
+            border-color: #2196F3;
+            background-color: #e3f2fd;
+        }
+        .response-option.selected {
+            border-color: #2196F3;
+            background-color: #bbdefb;
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".response-option").click(function() {
+                $(".response-option").removeClass("selected");
+                $(this).addClass("selected");
+                var response = $(this).data("response");
+                $("#responseInput").val(response);
+                
+                // Show/hide reschedule request field
+                if (response == "reschedule_requested") {
+                    $("#rescheduleRequestField").show();
+                } else {
+                    $("#rescheduleRequestField").hide();
+                }
+            });
+        });
+    </script>
+}
+
+@main("Interview Response") {
+    <div class="container">
+        <div class="row">
+            <div class="col s12 m10 offset-m1">
+                <div class="card-panel">
+                    <h4 class="center">Respond to Interview Invitation</h4>
+
+                    <div class="interview-summary">
+                        <h5>Interview Details</h5>
+                        <table class="striped">
+                            <tr>
+                                <th>RA Job Position:</th>
+                                <td>@interview.getRaJobApplication().getAppliedRAJob().getTitle()</td>
+                            </tr>
+                            <tr>
+                                <th>Faculty:</th>
+                                <td>@interview.getFaculty().getFirstName() @interview.getFaculty().getLastName()</td>
+                            </tr>
+                            <tr>
+                                <th>Faculty Email:</th>
+                                <td>@interview.getFaculty().getEmail()</td>
+                            </tr>
+                            <tr>
+                                <th>Interview Date & Time:</th>
+                                <td>@interview.getInterviewDate() @interview.getInterviewTime()</td>
+                            </tr>
+                            @if(interview.getLocation() != null && !interview.getLocation().isEmpty()) {
+                                <tr>
+                                    <th>Location:</th>
+                                    <td>@interview.getLocation()</td>
+                                </tr>
+                            }
+                            @if(interview.getMeetingLink() != null && !interview.getMeetingLink().isEmpty()) {
+                                <tr>
+                                    <th>Meeting Link:</th>
+                                    <td><a href="@interview.getMeetingLink()" target="_blank">@interview.getMeetingLink()</a></td>
+                                </tr>
+                            }
+                            @if(interview.getNotes() != null && !interview.getNotes().isEmpty()) {
+                                <tr>
+                                    <th>Notes:</th>
+                                    <td>@interview.getNotes()</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+
+                    <div class="row">
+                        <div class="col s12">
+                            <h5>Your Response</h5>
+                            <p>Please select how you would like to respond to this interview invitation:</p>
+                        </div>
+                    </div>
+
+                    @helper.form(action = routes.RAJobController.studentInterviewResponsePOST(interview.getId()), 'class -> "col s12") {
+                        <input type="hidden" id="responseInput" name="response" value="" required>
+                        
+                        <div class="row">
+                            <div class="col s12 m4">
+                                <div class="response-option" data-response="accepted">
+                                    <div class="center">
+                                        <i class="material-icons large green-text">check_circle</i>
+                                        <h6>Accept</h6>
+                                        <p>I will attend this interview at the scheduled time.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col s12 m4">
+                                <div class="response-option" data-response="declined">
+                                    <div class="center">
+                                        <i class="material-icons large red-text">cancel</i>
+                                        <h6>Decline</h6>
+                                        <p>I cannot attend this interview.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col s12 m4">
+                                <div class="response-option" data-response="reschedule_requested">
+                                    <div class="center">
+                                        <i class="material-icons large orange-text">schedule</i>
+                                        <h6>Request Reschedule</h6>
+                                        <p>I would like to request a different time.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" id="rescheduleRequestField" style="display: none;">
+                            <div class="input-field col s12">
+                                <textarea id="rescheduleReason" name="rescheduleReason" class="materialize-textarea"></textarea>
+                                <label for="rescheduleReason">Preferred Time or Reason for Reschedule Request</label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col s12 center">
+                                <button type="submit" class="btn waves-effect waves-light blue darken-2" id="submitBtn" disabled>
+                                    Submit Response
+                                </button>
+                                <a href="@routes.RAJobController.viewInterview(interview.getId())" class="btn waves-effect waves-light grey">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col s12 center">
+                            <a href="@routes.RAJobController.viewInterview(interview.getId())" class="btn waves-effect waves-light grey">
+                                Back to Interview Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Enable submit button when response is selected
+        $(".response-option").click(function() {
+            $("#submitBtn").prop("disabled", false);
+        });
+    </script>
+}
+

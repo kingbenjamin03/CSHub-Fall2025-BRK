@@ -62,8 +62,13 @@ public class UserService {
             StringBuffer userName = new StringBuffer();
             userName.append(userForm.field("firstName").value());
             userName.append(" ");
-            if (userForm.field("middleInitial").value() != null && !userForm.field("middleInitial").value().equals("")) {
-                userName.append(userForm.field("middleInitial").value());
+            // Check for middleName first (form field), then fall back to middleInitial
+            String middleName = userForm.field("middleName") != null ? userForm.field("middleName").value() : null;
+            if (middleName == null || middleName.isEmpty()) {
+                middleName = userForm.field("middleInitial") != null ? userForm.field("middleInitial").value() : null;
+            }
+            if (middleName != null && !middleName.isEmpty()) {
+                userName.append(middleName);
                 userName.append(" ");
             }
             userName.append(userForm.field("lastName").value());

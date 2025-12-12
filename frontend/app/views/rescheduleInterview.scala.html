@@ -1,0 +1,147 @@
+@import java.util
+@(interview: RAInterview, availabilitySlots: util.List[FacultyAvailability])
+@import helper._
+
+@scripts = {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        .current-interview {
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid #ff9800;
+            border-radius: 4px;
+            background-color: #fff3e0;
+        }
+        .available-slot {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .available-slot:hover {
+            background-color: #e8f5e9;
+        }
+        .available-slot.selected {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            // Initialize Flatpickr for date and time
+            flatpickr("#newDateTime", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                time_24hr: true,
+                minDate: "today",
+                minuteIncrement: 15
+            });
+
+            // Handle slot selection
+            $(".available-slot").click(function() {
+                $(".available-slot").removeClass("selected");
+                $(this).addClass("selected");
+                var slotStart = $(this).data("start");
+                $("#newDateTime").val(slotStart);
+            });
+        });
+    </script>
+}
+
+@main("Reschedule Interview") {
+    <div class="container">
+        <div class="row">
+            <div class="col s12 m10 offset-m1">
+                <div class="card-panel">
+                    <h4 class="center">Reschedule Interview</h4>
+
+                    <div class="current-interview">
+                        <h5>Current Interview Details</h5>
+                        <table class="striped">
+                            <tr>
+                                <th>RA Job Position:</th>
+                                <td>@interview.getRaJobApplication().getAppliedRAJob().getTitle()</td>
+                            </tr>
+                            <tr>
+                                <th>Applicant:</th>
+                                <td>@interview.getApplicant().getFirstName() @interview.getApplicant().getLastName()</td>
+                            </tr>
+                            <tr>
+                                <th>Current Date & Time:</th>
+                                <td><strong>@interview.getInterviewDate() @interview.getInterviewTime()</strong></td>
+                            </tr>
+                            @if(interview.getLocation() != null && !interview.getLocation().isEmpty()) {
+                                <tr>
+                                    <th>Current Location:</th>
+                                    <td>@interview.getLocation()</td>
+                                </tr>
+                            }
+                            @if(interview.getMeetingLink() != null && !interview.getMeetingLink().isEmpty()) {
+                                <tr>
+                                    <th>Current Meeting Link:</th>
+                                    <td>@interview.getMeetingLink()</td>
+                                </tr>
+                            }
+                        </table>
+                    </div>
+
+                    <div class="row">
+                        <div class="col s12">
+                            <h5>Available Time Slots</h5>
+                            @if(availabilitySlots == null || availabilitySlots.isEmpty()) {
+                                <p class="red-text">No availability slots found. Please <a href="@routes.RAJobController.manageAvailability()">manage your availability</a> first.</p>
+                            } else {
+                                <p>Click on an available slot to select it, or enter a custom date and time below.</p>
+                                <div id="availableSlots">
+                                    @for(slot <- availabilitySlots) {
+                                        <div class="available-slot" data-start="@slot.getStartTime()" data-end="@slot.getEndTime()">
+                                            <strong>@slot.getStartTime()</strong> - <strong>@slot.getEndTime()</strong>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    @helper.form(action = routes.RAJobController.rescheduleInterviewPOST(interview.getId()), 'class -> "col s12") {
+                        <div class="row">
+                            <div class="input-field col s12 m6">
+                                <input type="text" id="newDateTime" name="newDateTime" class="validate" required>
+                                <label for="newDateTime">New Interview Date & Time (YYYY-MM-DD HH:MM)</label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="input-field col s12 m6">
+                                <input type="url" id="meetingLink" name="meetingLink" class="validate" value="@if(interview.getMeetingLink() != null){@interview.getMeetingLink()}">
+                                <label for="meetingLink">Meeting Link (Optional)</label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="input-field col s12 m6">
+                                <input type="text" id="location" name="location" class="validate" value="@if(interview.getLocation() != null){@interview.getLocation()}">
+                                <label for="location">Location (Optional)</label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col s12">
+                                <button type="submit" class="btn waves-effect waves-light orange darken-2">
+                                    Reschedule Interview
+                                </button>
+                                <a href="@routes.RAJobController.viewInterview(interview.getId())" class="btn waves-effect waves-light grey">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+

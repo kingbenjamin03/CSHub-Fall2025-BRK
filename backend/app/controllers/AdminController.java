@@ -109,7 +109,7 @@ public class AdminController extends Controller {
             generalInfo.put("userName", user.getUserName());
             generalInfo.put("firstName", user.getFirstName());
             generalInfo.put("lastName", user.getLastName());
-            generalInfo.put("middleInitial", user.getMiddleInitial() != null ? user.getMiddleInitial() : "");
+            generalInfo.put("middleInitial", user.getMiddleName() != null ? user.getMiddleName() : "");
             generalInfo.put("email", user.getEmail());
             generalInfo.put("phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : "");
             generalInfo.put("organization", user.getOrganization() != null ? user.getOrganization() : "");

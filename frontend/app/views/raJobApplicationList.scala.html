@@ -160,7 +160,15 @@
                                     <td>&ensp; -</td>
                                     }
                                     <td>@entry.getCreatedTime()</td>
-                                    <td><a href="@routes.RAJobController.rajobApplicationDetail(entry.getId())">View Details</a></td>
+                                    <td>
+                                        <a href="@routes.RAJobController.rajobApplicationDetail(entry.getId())">View Details</a>
+                                        @if(session.get("userTypes") != null && session.get("userTypes").contains("1")) {
+                                            <span>&nbsp;|&nbsp;</span>
+                                            <a href="@routes.RAJobController.showScheduleInterviewForm(entry.getId())" class="btn-small waves-effect waves-light blue darken-2">
+                                                Schedule Interview
+                                            </a>
+                                        }
+                                    </td>
                                 </tr>
                             }
                             </tbody>

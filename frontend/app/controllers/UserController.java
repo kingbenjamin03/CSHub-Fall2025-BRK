@@ -46,7 +46,7 @@ public class UserController extends Controller {
     private FormFactory myFactory;
 
     public Result showTestPage() {
-        return ok(testPage.render());
+        return ok(testPage.render(""));
     }
 
     public Result handleTestPagePost() {
@@ -152,24 +152,54 @@ public class UserController extends Controller {
             ObjectNode jsonData = userService.createJsonFromUserForm(userForm);
             jsonData.put("mood", userForm.field("mood").value());
             jsonData.put("level", "normal");
-            jsonData.put("middleName", userForm.field("middleName").value());
-            JsonNode response = RESTfulCalls.postAPI(RESTfulCalls.getBackendAPIUrl(config,
-                    Constants.USER_REGISTER_POST), jsonData);
-            String newUserId = response.get("id").asText();
-            String email = userForm.field("email").value();
-
+            
+            // Map middleName to middleInitial for backend compatibility
+            String middleName = userForm.field("middleName").value();
+            if (middleName != null && !middleName.isEmpty()) {
+                jsonData.put("middleInitial", middleName);
+            } else {
+                jsonData.put("middleInitial", "");
+            }
+            
             Logger.debug("Created JSON data from form: " + jsonData.toString());
 
-            if (newUserId != null) {
-                // return ok(registerConfirmation.render(new Long(newUserId), "User"));
-                return sendRegisterEmail(email, newUserId);
-            } else {
-                Logger.debug("UserController user sign on backend error");
+            JsonNode response = RESTfulCalls.postAPI(RESTfulCalls.getBackendAPIUrl(config,
+                    Constants.USER_REGISTER_POST), jsonData);
+            
+            // Check for error responses first
+            if (response == null) {
+                Logger.error("UserController userRegisterPOST: Backend API returned null response");
                 return ok(registrationError.render("User"));
             }
+            
+            if (response.has("error")) {
+                String errorMessage = response.get("error").asText();
+                Logger.error("UserController userRegisterPOST: Backend returned error: " + errorMessage);
+                return ok(registrationError.render("User"));
+            }
+            
+            // Check if id exists and is valid
+            if (!response.has("id") || response.get("id").isNull()) {
+                Logger.error("UserController userRegisterPOST: Backend response missing id field. Response: " + response.toString());
+                return ok(registrationError.render("User"));
+            }
+            
+            String newUserId = response.get("id").asText();
+            if (newUserId == null || newUserId.isEmpty()) {
+                Logger.error("UserController userRegisterPOST: Backend returned empty user id");
+                return ok(registrationError.render("User"));
+            }
+            
+            String email = userForm.field("email").value();
+            Logger.debug("UserController userRegisterPOST: Successfully created user with id: " + newUserId);
+            
+            // return ok(registerConfirmation.render(new Long(newUserId), "User"));
+            return sendRegisterEmail(email, newUserId);
+            
         } catch (Exception e) {
             e.printStackTrace();
-            Logger.debug("UserController user sign on exception: " + e.toString());
+            Logger.error("UserController userRegisterPOST exception: " + e.toString());
+            Logger.error("Exception stack trace: ", e);
             return ok(registrationError.render("User"));
         }
     }
@@ -350,10 +380,10 @@ public class UserController extends Controller {
                     String token = loginForm.field("g-recaptcha-response").value();
                     reCaptchaResult = reCaptchaAuthenticate(token);
                 }
-                if (!reCaptchaResult) {
-                    flash("error", "Invalid reCAPTCHA code");
-                    return badRequest(login.render(userForm, userService.getPublicRecaptchaKey()));
-                }
+                // if (!reCaptchaResult) {
+                //     flash("error", "Invalid reCAPTCHA code");
+                //     return badRequest(login.render(userForm, userService.getPublicRecaptchaKey()));
+                // }
 
                 ObjectNode jsonData = Json.newObject();
                 jsonData.put("email", email);

@@ -67,7 +67,7 @@ public class UserMessageService {
         response.setTotal(messages.size());
         response.setSort(sortCriteria);
         response.setOffset(startIndex);
-        response.setResponse(messageList2JsonArray(paginatedMessages));
+        response.setItems(messageList2JsonArray(paginatedMessages));
         return response;
     }
 

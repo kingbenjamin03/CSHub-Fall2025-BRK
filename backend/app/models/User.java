@@ -22,7 +22,7 @@ import utils.Constants;
 @Entity
 @Getter
 @Setter
-@JsonIgnoreProperties({"project", "followers", "friendRequestSender", "friends", "createdProjects", "organizations"})
+@JsonIgnoreProperties({"project", "followers", "friendRequestSender", "friends", "createdProjects", "organizations", "publishedJobs", "createdChallenges", "reportedBugReports", "fixedBugReports", "reportedSuggestions", "implementedSuggestions", "sentMail", "receivedMail", "principalInvestigatedProjects", "sponsoredProjects", "participatedProjects"})
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = User.class)
 @ToString
 public class User extends Model {
@@ -37,6 +37,7 @@ public class User extends Model {
 
 	private String firstName;
 	private String lastName;
+	@Column(name = "middle_initial")
 	private String middleName;
 	private String organization;
 	private String email;

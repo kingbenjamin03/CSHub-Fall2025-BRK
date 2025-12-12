@@ -207,6 +207,30 @@ GET           /rajob/professors                                                 
 
 ######################################### RAJob ########################################################################
 
+########################################## Faculty Availability #######################################################
+GET           /faculty/availability/:facultyId                                                           controllers.FacultyAvailabilityController.getAvailabilityByFacultyId(facultyId: Long)
+POST          /faculty/availability/:facultyId/availableSlots                                            controllers.FacultyAvailabilityController.getAvailableSlots(facultyId: Long)
+POST          /faculty/availability                                                                       controllers.FacultyAvailabilityController.addAvailabilitySlot()
+PUT           /faculty/availability/:slotId                                                               controllers.FacultyAvailabilityController.updateAvailabilitySlot(slotId: Long)
+DELETE        /faculty/availability/:slotId                                                               controllers.FacultyAvailabilityController.deleteAvailabilitySlot(slotId: Long)
+
+######################################### Faculty Availability #########################################################
+
+########################################## RA Interview ###############################################################
+POST          /rajob/interview/schedule                                                                  controllers.RAInterviewController.scheduleInterview()
+GET           /rajob/interview/:interviewId                                                               controllers.RAInterviewController.getInterviewById(interviewId: Long)
+GET           /rajob/interview/application/:applicationId                                                 controllers.RAInterviewController.getInterviewsByApplicationId(applicationId: Long)
+GET           /rajob/interview/faculty/:facultyId                                                         controllers.RAInterviewController.getInterviewsByFacultyId(facultyId: Long)
+GET           /rajob/interview/applicant/:applicantId                                                      controllers.RAInterviewController.getInterviewsByApplicantId(applicantId: Long)
+PUT           /rajob/interview/:interviewId/reschedule                                                     controllers.RAInterviewController.rescheduleInterview(interviewId: Long)
+PUT           /rajob/interview/:interviewId/cancel                                                         controllers.RAInterviewController.cancelInterview(interviewId: Long)
+PUT           /rajob/interview/:interviewId/studentResponse                                                controllers.RAInterviewController.updateStudentResponse(interviewId: Long)
+GET           /rajob/interview/:interviewId/ical                                                           controllers.RAInterviewController.downloadICal(interviewId: Long)
+GET           /rajob/interview/:interviewId/google-calendar                                                controllers.RAInterviewController.getGoogleCalendarLink(interviewId: Long)
+GET           /rajob/interview/:interviewId/outlook-calendar                                               controllers.RAInterviewController.getOutlookCalendarLink(interviewId: Long)
+
+######################################### RA Interview ##################################################################
+
 ########################################## TAJob #######################################################################
 POST          /tajob/addTAJob                                                                             controllers.TAJobController.addTAJob()
 POST          /tajob/updateTAJob/:tajobId                                                                 controllers.TAJobController.updateTAJob(tajobId: Long)
