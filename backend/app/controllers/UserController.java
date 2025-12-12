@@ -566,6 +566,11 @@ public class UserController extends Controller {
             String result = new String();
 
             if (user.getPassword().equals(password)) {
+                // Extract and save mood from request
+                String mood = json.path("mood").asText("");
+                if (mood != null && !mood.isEmpty()) {
+                    user.setMood(mood);
+                }
                 user.save();
                 JsonNode jsonNode = Json.toJson(user);
                 result = jsonNode.toString();

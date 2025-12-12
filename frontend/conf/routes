@@ -111,6 +111,7 @@ POST        /message/edit/:id                                                   
 GET         /message/delete/:id                                                              controllers.UserMessageController.deleteFromForm(id: Long)
 GET         /message/search                                                                  controllers.UserMessageController.searchPage()
 POST        /message/search                                                                  controllers.UserMessageController.searchPOST()
+GET         /message/myMessages/:pageNum                                                      controllers.UserMessageController.myMessagesPage(pageNum: Integer)
 ########################################################## User Message #####################################################################
 
 ########################################################## Users #####################################################################

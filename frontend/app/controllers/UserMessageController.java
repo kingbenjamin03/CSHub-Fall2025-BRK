@@ -117,4 +117,23 @@ public class UserMessageController extends Controller {
         }
         return ok(userMessageSearch.render(messages));
     }
+
+    public Result myMessagesPage(Integer page) {
+        checkLoginStatus();
+        try {
+            Long authorId = Long.parseLong(session("id"));
+            JsonNode response = userMessageService.getMessageListByAuthor(authorId, page, 10);
+            List<UserMessage> messages = new ArrayList<>();
+            if (response != null && response.has("items")) {
+                for (JsonNode node : response.get("items")) {
+                    messages.add(UserMessage.deserialize(node));
+                }
+            }
+            int total = response != null && response.has("total") ? response.get("total").asInt() : 0;
+            return ok(userMessageList.render(messages, page, total));
+        } catch (Exception e) {
+            Logger.error("Error in myMessagesPage: " + e.getMessage());
+            return internalServerError("Error fetching your messages");
+        }
+    }
 }

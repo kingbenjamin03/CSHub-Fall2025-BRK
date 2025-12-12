@@ -476,6 +476,7 @@ POST          /message/addMessage                                               
 POST          /message/updateMessage                                                                      controllers.UserMessageController.updateMessage()
 GET           /message/messageDetail/:id                                                                  controllers.UserMessageController.messageDetail(id: Long)
 GET           /message/messageList                                                                        controllers.UserMessageController.messageList(pageLimit: java.util.Optional[Integer], offset: java.util.Optional[Integer], sortCriteria: java.util.Optional[String])
+GET           /message/messageListByAuthor/:authorId                                                      controllers.UserMessageController.messageListByAuthor(authorId: Long, pageLimit: java.util.Optional[Integer], offset: java.util.Optional[Integer], sortCriteria: java.util.Optional[String])
 POST          /message/deleteMessage                                                                      controllers.UserMessageController.deleteMessage()
 POST          /message/searchMessages                                                                     controllers.UserMessageController.searchMessages()
 ######################################### UserMessage ###############################################################

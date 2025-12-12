@@ -86,4 +86,15 @@ public class UserMessageController extends Controller {
             
         return ok(userMessageService.messageList2JsonArray(messages));
     }
+
+    public Result messageListByAuthor(Long authorId, Optional<Integer> pageLimit, Optional<Integer> offset, Optional<String> sortCriteria) {
+        List<UserMessage> messages = UserMessage.find.query()
+            .where()
+            .eq("authorId", authorId)
+            .eq("isActive", "True")
+            .orderBy("createTime desc")
+            .findList();
+        RESTResponse response = userMessageService.paginateResults(messages, offset, pageLimit, sortCriteria.orElse("createTime"));
+        return ok(response.response());
+    }
 }

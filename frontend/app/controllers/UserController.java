@@ -367,6 +367,7 @@ public class UserController extends Controller {
             } else {
                 String email = loginForm.field("email").value();
                 String password = loginForm.field("password").value();
+                String mood = loginForm.field("mood").value();
 
                 User user = new User();
                 user.setEmail(email);
@@ -388,6 +389,7 @@ public class UserController extends Controller {
                 ObjectNode jsonData = Json.newObject();
                 jsonData.put("email", email);
                 jsonData.put("password", password);
+                jsonData.put("mood", mood);
 
                 // POST Service JSON data
                 JsonNode response = RESTfulCalls.postAPI(RESTfulCalls.getBackendAPIUrl(config,

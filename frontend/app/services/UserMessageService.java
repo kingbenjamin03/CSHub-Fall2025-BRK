@@ -50,4 +50,9 @@ public class UserMessageService {
         jsonData.put("keyword", keyword);
         return RESTfulCalls.postAPI(RESTfulCalls.getBackendAPIUrl(config, "/message/searchMessages"), jsonData);
     }
+
+    public JsonNode getMessageListByAuthor(Long authorId, int page, int pageLimit) {
+        int offset = (page - 1) * pageLimit;
+        return RESTfulCalls.getAPI(RESTfulCalls.getBackendAPIUrl(config, "/message/messageListByAuthor/" + authorId + "?offset=" + offset + "&pageLimit=" + pageLimit));
+    }
 }
