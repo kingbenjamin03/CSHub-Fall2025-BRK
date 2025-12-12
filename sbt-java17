@@ -1,0 +1,3 @@
+#!/bin/bash
+export JAVA_HOME=$(jenv javahome)
+exec sbt "$@"
