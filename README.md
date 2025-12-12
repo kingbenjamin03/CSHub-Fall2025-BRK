@@ -16,7 +16,7 @@ This repo is intended to be run via **Docker Compose only** (no `sbt` commands).
 - **MySQL running on your host machine** (not in Compose) and reachable as `host.docker.internal:3306`
   - Database: `cshub`
   - Username: `root`
-  - Password: `pw5330`
+  - Password: `Pass4me21$`
 
 > Note: The included `docker-compose.yml` is configured to connect the backend container to a MySQL instance on your host using `host.docker.internal`. If your DB credentials/host differ, update them in `docker-compose.yml`.
 

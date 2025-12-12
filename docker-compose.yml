@@ -8,6 +8,9 @@ services:
       - "9037:9037"
     environment:
       - PLAY_SECRET_KEY=changeme-secret-key-change-in-production-please-update
+      - DB_URL=jdbc:mysql://host.docker.internal:3306/cshub?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - DB_USERNAME=root
+      - DB_PASSWORD=Pass4me2
     # Override database connection to use host.docker.internal for MySQL on host
     command: >
       /app/basicframework-1.0-SNAPSHOT/bin/basicframework
@@ -15,9 +18,9 @@ services:
       -Dhttp.port=9037
       -Dhttp.address=0.0.0.0
       -Dplay.filters.disabled.0=play.filters.hosts.AllowedHostsFilter
-      -Ddb.default.url=jdbc:mysql://host.docker.internal:3306/cshub?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      -Ddb.default.url=jdbc:mysql://root:Pass4me2@host.docker.internal:3306/cshub?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       -Ddb.default.username=root
-      -Ddb.default.password=pw5330
+      -Ddb.default.password=Pass4me2
       -Dplay.evolutions.enabled=false
     extra_hosts:
       - "host.docker.internal:host-gateway"
