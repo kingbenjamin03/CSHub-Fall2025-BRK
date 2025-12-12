@@ -1024,6 +1024,42 @@ public class UserController extends Controller {
         }
     }
 
+    public Result showMoodPage() {
+        String userId = session("id");
+        String email = session("email");
+
+        return ok(mood.render(userId, email));
+    }
+
+    public Result saveMood() {
+        try {
+            Form<User> form = myFactory.form(User.class).bindFromRequest();
+            String mood = form.field("mood").value();
+            String userId = session("id");
+
+            ObjectNode jsonData = Json.newObject();
+            jsonData.put("id", userId);
+            jsonData.put("mood", mood);
+
+            JsonNode response = RESTfulCalls.postAPI(RESTfulCalls.getBackendAPIUrl(config, "/user/saveMood"),
+                    jsonData);
+
+            String message;
+            if (response == null || response.has("error")) {
+                message = "Failed to save mood (maybe backend not ready)";
+            } else {
+                message = "Mood saved successfully!";
+            }
+
+            return ok("<script>alert('" + message + "'); window.location='/user/mood';</script>")
+                    .as("text/html");
+
+        } catch (Exception e) {
+            Logger.error("saveMood exception: " + e.toString());
+            return ok("<script>alert('Unexpected error while saving mood'); window.location='/user/mood';</script>")
+                    .as("text/html");
+        }
+    }
 
 
 }

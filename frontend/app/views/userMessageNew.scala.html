@@ -1,0 +1,28 @@
+@()
+
+@main("New Message") {
+<div class="container">
+    <h4 class="center">Create New Message</h4>
+    <div class="row">
+        <form class="col s12" action="@routes.UserMessageController.createFromForm()" method="post">
+            <div class="row">
+                <div class="input-field col s12">
+                    <textarea id="content" name="content" class="materialize-textarea" data-length="5000" required></textarea>
+                    <label for="content">Message Content</label>
+                </div>
+            </div>
+            <div class="row center">
+                <a href="@routes.UserMessageController.listPage(1)" class="btn-flat">Cancel</a>
+                <button class="btn waves-effect waves-light blue" type="submit">Submit
+                    <i class="material-icons right">send</i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        $('textarea#content').characterCounter();
+    });
+</script>
+}

@@ -1,0 +1,26 @@
+@(message: models.UserMessage)
+
+@main("Message Detail") {
+<div class="container">
+    <div class="card">
+        <div class="card-content">
+            <span class="card-title">
+                <img src="@message.getAuthorAvatar()" alt="" class="circle responsive-img" style="width: 50px; vertical-align: middle; margin-right: 10px;">
+                @message.getAuthorName()
+            </span>
+            <p style="white-space: pre-wrap; margin-top: 20px;">@message.getContent()</p>
+            <div class="row" style="margin-top: 20px;">
+                <div class="col s6 grey-text">Created: @message.getCreateTime()</div>
+                <div class="col s6 grey-text right-align">Updated: @message.getUpdateTime()</div>
+            </div>
+        </div>
+        <div class="card-action">
+            <a href="@routes.UserMessageController.listPage(1)" class="btn-flat">Back</a>
+            @if(session.get("id") == String.valueOf(message.getAuthorId())) {
+                <a href="@routes.UserMessageController.editPage(message.getId())" class="btn blue">Edit</a>
+                <a href="@routes.UserMessageController.deleteFromForm(message.getId())" class="btn red" onclick="return confirm('Are you sure?')">Delete</a>
+            }
+        </div>
+    </div>
+</div>
+}

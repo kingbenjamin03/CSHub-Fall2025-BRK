@@ -98,33 +98,18 @@ GET         /challenge/challengeApplicationsDetail/:challengeApplicationId      
 GET         /challenge/challengeList/:pageNum                                                controllers.ChallengeController.challengeList(pageNum: Integer, sortCriteria: String ?= "")
 GET         /challenge/challengeListAdmin/:pageNum                                           controllers.ChallengeController.challengeListAdmin(pageNum: Integer, sortCriteria: String ?= "")
 GET         /challenge/challengeDetail/:challengeId                                          controllers.ChallengeController.challengeDetail(challengeId: Long)
-GET         /challenge/searchPage                                                            controllers.ChallengeController.searchPage()
-POST        /challenge/searchPOST/:pageNum                                                   controllers.ChallengeController.searchPOST(pageNum: Integer, sortCriteria: String ?= "")
 
-#POST        /project/searchPOST                                                              controllers.ProjectController.searchPOST(pageNum: Integer, sortCriteria: String)
-#GET         /project/deleteProject/:projectId                                                controllers.ProjectController.deleteProject(projectId: Long)
-#POST        /project/isProjectNameExisted                                                    controllers.ProjectController.isProjectNameExisted()
-#POST        /project/uploadDescriptionImg/:projectId/:imageNumber                            controllers.ProjectController.uploadDescriptionImage(projectId: Long, imageNumber: Integer)
-#GET         /project/renameDescriptionImg/:projectId/:imageNumber/:currentImageNumber        controllers.ProjectController.renameDescriptionImage(projectId: Long, imageNumber: Integer, currentImageNumber: Integer)
-#
-##GET         /project/downloadPDFFile/:projectId                                            controllers.ProjectController.downloadPDFFile(projectId: Long)
-#
-#GET         /project/doesProjectExist/:id                                                    controllers.ProjectController.isProjectExist(id : String)
-#POST        /project/associateProjectsToNotebook/:notebookId                                 controllers.ProjectController.associateProjectsToNotebook(notebookId : Long)
-#GET         /project/getProjects                                                             controllers.ProjectController.getProjectLists()
-#GET         /project/myEnrolledProjects/:pageNum                                             controllers.ProjectController.getMyEnrolledProjects(pageNum: Integer, sortCriteria: String)
-#GET         /project/setProjectZoneAsGeoNEX                                                  controllers.ProjectController.setProjectZoneAsGeoNEX()
-#GET         /project/followedByUser/:id/:eventList                                           controllers.ProjectController.followedByUser(id:Long, eventList:String)
-#GET         /project/unFollowedByUser/:id/:eventList                                         controllers.ProjectController.unFollowedByUser(id:Long, eventList:String)
-#GET         /project/myFollowedProjects                                                      controllers.ProjectController.myFollowedProjects(page: Integer ?= 1, sortCriteria: String ?= "")
-#GET         /project/checkParentProject/:parentProjectId                                     controllers.ProjectController.checkParentProject(parentProjectId:String)
-#GET         /project/addProjectFollowersPage/:id                                             controllers.ProjectController.addProjectFollowersPage(id:Long)
-#POST        /project/addOneFollower/:id/:event                                               controllers.ProjectController.addOneFollower(id:Long, event:String)
-#GET         /project/deleteOneFollower/:userId/:projectId/:eventType                         controllers.ProjectController.deleteOneFollower(userId:Long, projectId:Long, eventType:String)
-
-########################################################## Challenges #####################################################################
-
-
+########################################################## User Message #####################################################################
+GET         /message/list/:pageNum                                                           controllers.UserMessageController.listPage(pageNum: Integer)
+GET         /message/detail/:id                                                              controllers.UserMessageController.detail(id: Long)
+GET         /message/new                                                                     controllers.UserMessageController.newPage()
+POST        /message/new                                                                     controllers.UserMessageController.createFromForm()
+GET         /message/edit/:id                                                                controllers.UserMessageController.editPage(id: Long)
+POST        /message/edit/:id                                                                controllers.UserMessageController.updateFromForm(id: Long)
+GET         /message/delete/:id                                                              controllers.UserMessageController.deleteFromForm(id: Long)
+GET         /message/search                                                                  controllers.UserMessageController.searchPage()
+POST        /message/search                                                                  controllers.UserMessageController.searchPOST()
+########################################################## User Message #####################################################################
 
 ########################################################## Users #####################################################################
 GET         /user/userRegisterPage                                                           controllers.UserController.userRegisterPage()
@@ -437,3 +422,6 @@ GET         /file/:tableName/:challengeFileType/:tableRecorderId                
 
 GET     /testpage                   controllers.UserController.showTestPage()
 POST    /testpage                   controllers.UserController.handleTestPagePost()
+
+GET         /user/mood                                                                       controllers.UserController.showMoodPage()
+POST        /user/mood                                                                       controllers.UserController.saveMood()

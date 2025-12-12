@@ -1,0 +1,45 @@
+@(messages: java.util.List[models.UserMessage])
+
+@main("Search Messages") {
+<div class="container">
+    <h4 class="center">Search Messages</h4>
+    
+    <div class="row">
+        <form class="col s12" action="@routes.UserMessageController.searchPOST()" method="post">
+            <div class="row">
+                <div class="input-field col s10">
+                    <i class="material-icons prefix">search</i>
+                    <input id="keyword" name="keyword" type="text" required>
+                    <label for="keyword">Search by content...</label>
+                </div>
+                <div class="input-field col s2">
+                    <button class="btn waves-effect waves-light blue" type="submit">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @if(messages != null && !messages.isEmpty()) {
+    <div class="row">
+        <h5>Search Results</h5>
+        @for(message <- messages) {
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">
+                        <img src="@message.getAuthorAvatar()" alt="" class="circle responsive-img" style="width: 40px; vertical-align: middle; margin-right: 10px;">
+                        @message.getAuthorName()
+                    </span>
+                    <p>@message.getContent()</p>
+                    <p class="grey-text right-align"><small>Posted: @message.getCreateTime()</small></p>
+                </div>
+                <div class="card-action">
+                    <a href="@routes.UserMessageController.detail(message.getId())">Read More</a>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+    }
+</div>
+}

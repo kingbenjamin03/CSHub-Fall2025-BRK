@@ -1,0 +1,20 @@
+@(userId: String, email: String)
+
+@main("Today's Mood") {
+<div class="container">
+    <h4 class="center">Today's Mood</h4>
+
+    <p><strong>User ID:</strong> @userId</p>
+    <p><strong>Email:</strong> @email</p>
+
+    @helper.form(action = routes.UserController.saveMood()) {
+    <div class="row">
+        <div class="input-field col s12">
+            <input type="text" name="mood" id="mood" maxlength="64" required>
+            <label for="mood">Enter your mood</label>
+        </div>
+    </div>
+    <button class="btn blue" type="submit">Save Mood</button>
+    }
+</div>
+}

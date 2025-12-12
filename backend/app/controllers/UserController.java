@@ -1336,6 +1336,31 @@ public class UserController extends Controller {
         return ok();
     }
 
+    public Result saveMood() {
+        JsonNode json = request().body().asJson();
+        if (json == null) {
+            return badRequest(Json.newObject().put("error", "Invalid JSON data"));
+        }
+
+        try {
+            long userId = json.get("id").asLong();
+            String mood = json.get("mood").asText();
+
+            User user = User.find.byId(userId);
+            if (user == null) {
+                return badRequest(Json.newObject().put("error", "User not found"));
+            }
+
+            user.setMood(mood);
+            user.save();
+
+            return ok(Json.newObject().put("success", "Mood saved successfully"));
+        } catch (Exception e) {
+            Logger.error("Backend saveMood exception: " + e.toString());
+            return internalServerError(Json.newObject().put("error", "Failed to save mood"));
+        }
+    }
+
     public static String randomPassword() {
         String stringDic = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         SecureRandom rnd = new SecureRandom();

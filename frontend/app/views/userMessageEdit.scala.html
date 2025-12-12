@@ -1,0 +1,29 @@
+@(message: models.UserMessage)
+
+@main("Edit Message") {
+<div class="container">
+    <h4 class="center">Edit Message</h4>
+    <div class="row">
+        <form class="col s12" action="@routes.UserMessageController.updateFromForm(message.getId())" method="post">
+            <div class="row">
+                <div class="input-field col s12">
+                    <textarea id="content" name="content" class="materialize-textarea" data-length="5000" required>@message.getContent()</textarea>
+                    <label for="content">Message Content</label>
+                </div>
+            </div>
+            <div class="row center">
+                <a href="@routes.UserMessageController.detail(message.getId())" class="btn-flat">Cancel</a>
+                <button class="btn waves-effect waves-light blue" type="submit">Update
+                    <i class="material-icons right">save</i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        $('textarea#content').characterCounter();
+        M.textareaAutoResize($('#content'));
+    });
+</script>
+}

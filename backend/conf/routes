@@ -446,4 +446,13 @@ POST /technology/setFiles/:serviceId  controllers.TechnologyController.setFiles(
 GET /technology/fileDetail/:serviceId controllers.TechnologyController.getFileById(serviceId: Long)
 POST            /file/upload/:tableName/:fileType/:recordId                                                             controllers.FileController.uploadRawFile(tableName:String,fileType:String,recordId:Long)
 POST    /user/testpage             controllers.UserController.handleTestPagePost()
+POST          /user/saveMood                                                                      controllers.UserController.saveMood()
+######################################### UserMessage ###############################################################
+POST          /message/addMessage                                                                         controllers.UserMessageController.addMessage()
+POST          /message/updateMessage                                                                      controllers.UserMessageController.updateMessage()
+GET           /message/messageDetail/:id                                                                  controllers.UserMessageController.messageDetail(id: Long)
+GET           /message/messageList                                                                        controllers.UserMessageController.messageList(pageLimit: java.util.Optional[Integer], offset: java.util.Optional[Integer], sortCriteria: java.util.Optional[String])
+POST          /message/deleteMessage                                                                      controllers.UserMessageController.deleteMessage()
+POST          /message/searchMessages                                                                     controllers.UserMessageController.searchMessages()
+######################################### UserMessage ###############################################################
 

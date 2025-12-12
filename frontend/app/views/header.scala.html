@@ -95,6 +95,17 @@
 
                             </ul>
                         </li>
+
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-trigger" data-target="dropdown-Messages">
+                                Message Board</a>
+                            <ul class="dropdown-content" id="dropdown-Messages">
+                                <li><a href="@routes.UserMessageController.list(1)">Message List</a></li>
+                                <li><a href="@routes.UserMessageController.create()">Post Message</a></li>
+                                <li><a href="@routes.UserMessageController.search()">Search Messages</a></li>
+                            </ul>
+                        </li>
+
                         @*<li class="dropdown">
                         <a href="#" class="dropdown-trigger" data-target="dropdown-Projects">
                         Project</a>

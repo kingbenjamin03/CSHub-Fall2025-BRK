@@ -1,0 +1,53 @@
+@(messages: java.util.List[models.UserMessage], currentPage: Integer, total: Integer)
+
+@main("Message Board") {
+<div class="container">
+    <h4 class="center">Message Board</h4>
+    
+    <div class="row">
+        <div class="col s12">
+            <a href="@routes.UserMessageController.newPage()" class="btn waves-effect waves-light blue right">
+                <i class="material-icons left">add</i>New Message
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        @for(message <- messages) {
+        <div class="col s12">
+            <div class="card">
+                <div class="card-content">
+                    <span class="card-title">
+                        <img src="@message.getAuthorAvatar()" alt="" class="circle responsive-img" style="width: 40px; vertical-align: middle; margin-right: 10px;">
+                        @message.getAuthorName()
+                    </span>
+                    <p>@message.getContent()</p>
+                    <p class="grey-text right-align"><small>Posted: @message.getCreateTime()</small></p>
+                </div>
+                <div class="card-action">
+                    <a href="@routes.UserMessageController.detail(message.getId())">Read More</a>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+
+    <div class="center">
+        <ul class="pagination">
+            @if(currentPage > 1) {
+                <li class="waves-effect"><a href="@routes.UserMessageController.listPage(currentPage - 1)"><i class="material-icons">chevron_left</i></a></li>
+            } else {
+                <li class="disabled"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+            }
+            
+            <li class="active blue"><a href="#!">@currentPage</a></li>
+            
+            @if(messages.size() == 10) {
+                <li class="waves-effect"><a href="@routes.UserMessageController.listPage(currentPage + 1)"><i class="material-icons">chevron_right</i></a></li>
+            } else {
+                <li class="disabled"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
+            }
+        </ul>
+    </div>
+</div>
+}
