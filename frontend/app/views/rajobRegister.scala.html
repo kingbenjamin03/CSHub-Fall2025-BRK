@@ -197,6 +197,7 @@
                     <h4 class="center form-signin-heading" align="center">
                         Post RA Job</h4>
                     <form class="form-signin" enctype="multipart/form-data" id="jobForm" onsubmit="return prepareFormForSubmission()" method="post" action="@routes.RAJobController.rajobRegisterPOST()">
+                        @helper.CSRF.formField
                         <div class="row">
                             <div class="input-field col s12">
                                 <input

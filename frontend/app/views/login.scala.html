@@ -1,6 +1,5 @@
 @(userForm: play.data.Form[models.User], siteKey: String)
     @import helper._
-    @import play.filters.csrf.CSRF
 
     @scripts = {
         <script type="text/javascript" src='@routes.Assets.at("javascripts/database_field_length.js")'></script>
@@ -10,7 +9,7 @@
 
 @main("Login", scripts) {
     @helper.form(action = routes.UserController.userLogin(), 'class -> "form-signin", 'onsubmit -> "return checkFormValid();") {
-        @CSRF.formField
+        @helper.CSRF.formField
         <div class="container">
             <div class="row">
                 <div class="col m6 s12 offset-m3" style="top: ">

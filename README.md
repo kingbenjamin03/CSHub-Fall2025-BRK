@@ -18,6 +18,8 @@ This repo is intended to be run via **Docker Compose only** (no `sbt` commands).
   - Username: `root`
   - Password: `Pass4me21$`
 
+  > Use your own local MySQL credentials. Update `docker-compose.yml` to match.
+
 > Note: The included `docker-compose.yml` is configured to connect the backend container to a MySQL instance on your host using `host.docker.internal`. If your DB credentials/host differ, update them in `docker-compose.yml`.
 
 #### One-time setup: you must provide your own MySQL data

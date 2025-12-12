@@ -267,7 +267,7 @@ GET         /rajob/rajobEditPage/:rajobId/:status                               
 POST        /rajob/rajobEditPOST/:rajobId                                                       controllers.RAJobController.rajobEditPOST(rajobId: Long)
 GET         /rajob/rajobApplyPage/:rajobId                                                      controllers.RAJobController.rajobApplyPage(rajobId: Long)
 POST        /rajob/rajobApplyPOST/:rajobId                                                      controllers.RAJobController.rajobApplyPOST(rajobId: Long)
-# GET         /rajob/rajobApplicationList/:pageNum                                                controllers.RAJobController.rajobApplicationList(pageNum: Integer, sortCriteria: String ?= "")
+GET         /rajob/rajobApplicationList/:pageNum                                                controllers.RAJobController.rajobApplicationList(pageNum: Integer, sortCriteria: String ?= "")
 POST        /rajob/rajobStatue/:rajobId/:rajobStatus                                            controllers.RAJobController.rajobStatueChange(rajobId: Long, rajobStatus: String)
 POST        /rajob/rajobApplicationStatusChange/:rajobApplicationId/:rajobApplicationStatus                 controllers.RAJobController.rajobApplicationStatusChange(rajobApplicationId: Long, rajobApplicationStatus: String)
 ##GET         /job/downloadPDFFile/:technologyId                                            controllers.TechnologyController.downloadPDFFile(technologyId: Long)
@@ -296,6 +296,9 @@ POST        /rajob/sendOfferEmail                                               
 # Interview Scheduling Routes
 GET         /rajob/scheduleInterview/:raJobApplicationId                                         controllers.RAJobController.showScheduleInterviewForm(raJobApplicationId: Long)
 POST        /rajob/scheduleInterview/:raJobApplicationId                                         controllers.RAJobController.scheduleInterviewPOST(raJobApplicationId: Long)
+# Backwards-compatible alias (older links/bookmarks)
+GET         /rajob/scheduleInterviewview/:raJobApplicationId                                     controllers.RAJobController.showScheduleInterviewForm(raJobApplicationId: Long)
+POST        /rajob/scheduleInterviewview/:raJobApplicationId                                     controllers.RAJobController.scheduleInterviewPOST(raJobApplicationId: Long)
 GET         /rajob/manageAvailability                                                             controllers.RAJobController.manageAvailability()
 POST        /rajob/manageAvailability                                                             controllers.RAJobController.manageAvailabilityPOST()
 GET         /rajob/interview/:interviewId                                                          controllers.RAJobController.viewInterview(interviewId: Long)

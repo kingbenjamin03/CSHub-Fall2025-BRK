@@ -48,6 +48,7 @@ public class RAJobController extends Controller {
 
     private final RAJobService rajobService;
     private final RAJobApplicationService rajobApplicationService;
+    private final JobApplicationService jobApplicationService;
 
     private final UserService userService;
     private final AccessTimesService accessTimesService;
@@ -66,6 +67,7 @@ public class RAJobController extends Controller {
                            RAJobService rajobService,
                            UserService userService,
                            RAJobApplicationService rajobApplicationService,
+                           JobApplicationService jobApplicationService,
                            AccessTimesService accessTimesService,
                            FileService fileService,
                            FacultyAvailabilityService facultyAvailabilityService,
@@ -75,6 +77,7 @@ public class RAJobController extends Controller {
         rajobApplicationFormTemplate = factory.form(RAJobApplication.class);
 
         this.rajobApplicationService = rajobApplicationService;
+        this.jobApplicationService = jobApplicationService;
         this.rajobService = rajobService;
         this.userService = userService;
         this.accessTimesService = accessTimesService;
@@ -93,7 +96,10 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result rajobRegisterPage() {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         String userTypes = session("userTypes");
         String userId    = session("id");
         String userEmail  = session("email");
@@ -122,7 +128,10 @@ public class RAJobController extends Controller {
      * @return
      */
     public Result rajobRegisterPOST() {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         Logger.debug("▶ Entering RAJobController.rajobRegisterPOST");
         try {
             Form<RAJob> rajobForm = rajobFormTemplate.bindFromRequest();
@@ -217,6 +226,10 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result rajobEditPage(Long rajobId, String status) {
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             RAJob rajob = rajobService.getRAJobById(rajobId);
             if (rajob == null) {
@@ -253,7 +266,10 @@ public class RAJobController extends Controller {
      * @return
      */
     public Result rajobEditPOST(Long rajobId) {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             Form<RAJob> rajobForm = rajobFormTemplate.bindFromRequest();
             if (rajobForm.hasErrors()) {
@@ -478,6 +494,67 @@ public class RAJobController extends Controller {
             return ok(generalError.render());
         }
     }
+
+    /************************************************** RA Job Application List ****************************************/
+    /**
+     * Render RA job applications list page.
+     *
+     * This route was re-enabled to support the applicant list view that contains the "Schedule Interview" button.
+     *
+     * Requirements / behavior:
+     * - Faculty-only (session userTypes must contain "1")
+     * - Expects query parameter: ?rajobId=<id>
+     *   Example: /rajob/rajobApplicationList/1?rajobId=123&sortCriteria=id
+     */
+    @With(OperationLoggingAction.class)
+    public Result rajobApplicationList(Integer pageNum, String sortCriteria) {
+        checkLoginStatus();
+        try {
+            String userId = session("id");
+            String userTypes = session("userTypes");
+            if (userTypes == null || !userTypes.contains("1")) {
+                return unauthorized("Only faculty members can view RA job applications.");
+            }
+
+            if (pageNum == null || pageNum < 1) {
+                pageNum = 1;
+            }
+            if (sortCriteria == null) {
+                sortCriteria = "";
+            }
+
+            String rajobIdStr = request().getQueryString("rajobId");
+            if (rajobIdStr == null || rajobIdStr.trim().isEmpty()) {
+                Application.flashMsg("error", "Missing rajobId. Please open an RA job first, then view its applicants.");
+                return redirect(routes.RAJobController.rajobListPostedByUser(1));
+            }
+
+            Long rajobId = Long.parseLong(rajobIdStr.trim());
+
+            // Verify the current user is the publisher of the RA job
+            RAJob rajob = rajobService.getRAJobById(rajobId);
+            if (rajob == null || rajob.getRajobPublisher() == null || rajob.getRajobPublisher().getId() != Long.parseLong(userId)) {
+                return unauthorized("You can only view applications for your own RA job postings.");
+            }
+
+            int pageLimit = Integer.parseInt(Constants.PAGINATION_NUMBER_ITEM_TWENTY);
+            int offset = pageLimit * (pageNum - 1);
+
+            JsonNode response = RESTfulCalls.getAPI(RESTfulCalls.getBackendAPIUrl(config,
+                    Constants.STR_BACKEND_URL_JOB_APPLICATIONS + "rajob/" + rajobId
+                            + "?offset=" + offset
+                            + "&pageLimit=" + pageLimit
+                            + "&sortCriteria=" + sortCriteria
+                            + "&pageNum=" + pageNum));
+
+            return jobApplicationService.renderJobApplicationListPage("rajob", response, pageLimit);
+        } catch (Exception e) {
+            Logger.error("RAJobController.rajobApplicationList() exception: " + e.toString(), e);
+            Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+            return ok(generalError.render());
+        }
+    }
+    /************************************************** End RA Job Application List ************************************/
 
     /**
      * Ths method intends to return details of an RA job application. If an RA job application is not found, return to the all job application page (page 1?).
@@ -934,7 +1011,10 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result showScheduleInterviewForm(Long raJobApplicationId) {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             String userId = session("id");
             String userTypes = session("userTypes");
@@ -979,10 +1059,32 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result scheduleInterviewPOST(Long raJobApplicationId) {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             String userId = session("id");
+            String userTypes = session("userTypes");
+
+            // Verify user is faculty (researcher)
+            if (userTypes == null || !userTypes.contains("1")) {
+                return unauthorized("Only faculty members can schedule interviews.");
+            }
             Long facultyId = Long.parseLong(userId);
+
+            // Verify the current user is the faculty member (publisher of the RA job)
+            RAJobApplication application = rajobApplicationService.getRAJobApplicationById(raJobApplicationId);
+            if (application == null) {
+                Logger.debug("RAJobController.scheduleInterviewPOST() application not found");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+            if (application.getAppliedRAJob() == null
+                    || application.getAppliedRAJob().getRajobPublisher() == null
+                    || application.getAppliedRAJob().getRajobPublisher().getId() != facultyId) {
+                return unauthorized("You can only schedule interviews for your own RA job postings.");
+            }
 
             Form<?> form = myFactory.form().bindFromRequest();
             String interviewDateTime = form.field("interviewDateTime").value();
@@ -993,6 +1095,15 @@ public class RAJobController extends Controller {
             if (interviewDateTime == null || interviewDateTime.isEmpty()) {
                 Application.flashMsg("error", "Interview date and time are required.");
                 return redirect(routes.RAJobController.showScheduleInterviewForm(raJobApplicationId));
+            }
+
+            // UI uses "YYYY-MM-DD HH:MM" (flatpickr: "Y-m-d H:i"), backend expects seconds.
+            // Normalize common cases to "YYYY-MM-DD HH:MM:SS".
+            String dt = interviewDateTime.trim();
+            if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$", dt)) {
+                interviewDateTime = dt + ":00";
+            } else if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$", dt)) {
+                interviewDateTime = dt.replace('T', ' ') + ":00";
             }
 
             RAInterview interview = raInterviewService.scheduleInterview(
@@ -1024,7 +1135,10 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result manageAvailability() {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             String userId = session("id");
             String userTypes = session("userTypes");
@@ -1053,7 +1167,10 @@ public class RAJobController extends Controller {
      */
     @With(OperationLoggingAction.class)
     public Result manageAvailabilityPOST() {
-        checkLoginStatus();
+        Result loginCheck = checkLoginStatus();
+        if (loginCheck.status() != Http.Status.OK) {
+            return loginCheck;
+        }
         try {
             String userId = session("id");
             Long facultyId = Long.parseLong(userId);
