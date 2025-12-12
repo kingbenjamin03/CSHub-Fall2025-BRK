@@ -571,6 +571,7 @@ create table rajob_application
     avatar                 varchar(255) null,
     created_time           varchar(255) null,
     is_active              varchar(255) null,
+    status                 varchar(255) null,
     constraint fk_rajob_application_applicant_id
         foreign key (applicant_id) references user (id),
     constraint fk_rajob_application_rajob_id

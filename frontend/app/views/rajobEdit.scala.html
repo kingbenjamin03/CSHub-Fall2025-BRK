@@ -2,6 +2,7 @@
 @import helper._
 @import models._
 @import models.RAJob
+@import play.filters.csrf.CSRF
 
 @scripts = {
     <style>
@@ -189,6 +190,9 @@
                             processData: false,
                             async: false,
                             type: "POST",
+                            headers: {
+                                'Csrf-Token': (window.__CSRF_TOKEN__ || $('input[name=csrfToken]').val() || '')
+                            },
                             success: function (data) {
                                 console.log(data);
                                 $(img).attr("src", data);
@@ -301,6 +305,7 @@
                         </div>
                     </div>
                     <form class="form-signin" enctype="multipart/form-data" id="editTechnologyForm" method="post" onsubmit="return getHTML()" action="@routes.RAJobController.rajobEditPOST(rajob.getId)">
+                        @CSRF.formField
                         <div id="hiddenDiv" style="display: none;">
                             <input name="id" id="id" class="validate" value="@rajob.getId">
                             <input name="isActive" id="isActive" class="validate" value="@rajob.getIsActive">
@@ -519,6 +524,11 @@
                             alert("Failed to check the file. Please try again later.");
                         });
             }
+    </script>
+
+    <script type="text/javascript">
+            // Make CSRF token available to AJAX calls (e.g., /rajob/uploadImg/*)
+            window.__CSRF_TOKEN__ = "@CSRF.getToken.value";
     </script>
 
 }
