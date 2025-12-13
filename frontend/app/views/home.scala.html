@@ -17,10 +17,7 @@
 
                 $('.dropdown-trigger').dropdown();
 
-                $('.carousel.carousel-slider').carousel({
-                    fullWidth: true,
-                    indicators: true
-                });
+                // Carousel initialization is handled in init.js to avoid conflicts
             });
 
             function reinitIframe() {
@@ -79,6 +76,19 @@
                 position: absolute;
                 top: 100%;
                 right: calc(50% - 100px);
+            }
+            
+            /* Ensure carousel images are visible */
+            .carousel-item img {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            .carousel-item .col.s6 {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
     </style>
 
@@ -155,7 +165,7 @@
         </div>
     } else {
         <div class="row">
-            <div class="col s12 blue darken-4 white-text" style='background: url("@routes.Assets.at("images/starfield-banner-blue.jpg")") repeat;'>
+            <div class="col s12 blue darken-4 white-text" style='background: url("@routes.Assets.at("images/starfield-banner-blue.jpg")") repeat; min-height: 500px;'>
                 <div class="container">
                     <div class="carousel carousel-slider center" id="mainCarousel">
                         <div class="carousel-fixed-item center">
@@ -164,14 +174,16 @@
                             <a class="btn-floating white waves-effect waves-light" id="nextOnMainCarousel" title="Next Slide"><i class="material-icons blue-text text-darken-3">
                                 keyboard_arrow_right</i></a>
                         </div>
-                        <div class="carousel-item white-text" href="#one!">
-                            <div class="col s12">
-                                <h1 class="center"><strong>SMU-Lyle-Sci-Hub</strong></h1>
-                                <h3 class="center">Intelligent Assistant Linking SMU to Local Industry</h3>
+                        <div class="carousel-item white-text" href="#one!" style="min-height: 500px; padding: 80px 0;">
+                            <div class="row">
+                                <div class="col s12">
+                                    <h1 class="center"><strong>SMU-Lyle-Sci-Hub</strong></h1>
+                                    <h3 class="center">Intelligent Assistant Linking SMU to Local Industry</h3>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="carousel-item white-text" href="#two!">
+                        <div class="carousel-item white-text" href="#two!" style="min-height: 500px; padding: 80px 0;">
                             <div class="row">
                                 <div class="col s5 offset-s1 left-align">
                                     <h1 style='font-size: 3.5em;'><strong>Open Collaboration Platform</strong></h1>
@@ -180,15 +192,12 @@
                                         line-height: 40px;">
                                         A platform supporting and facilitating SMU/industry collaboration.</h6>
                                 </div>
-                                <div class="col s6">
-                                    @*                                        <img src='@routes.Assets.at("images/opennexdata-1.png")' style="width: 50%;*@
-                                    @*                                            height: 50%;">*@
-                                    <img src='@routes.Assets.at("images/home_collaboration.png")' class="responsive-img" style="width: 350px;
-                                        margin-top: 1rem;">
+                                <div class="col s6" style="display: flex; align-items: center; justify-content: center;">
+                                    <img src='@routes.Assets.at("images/home_collaboration.png")' class="responsive-img" style="max-width: 100%; height: auto; margin-top: 1rem; display: block;">
                                 </div>
                             </div>
                         </div>
-                        <div class="carousel-item white-text" href="#three!">
+                        <div class="carousel-item white-text" href="#three!" style="min-height: 500px; padding: 80px 0;">
                             <div class="row">
                                 <div class="col s5 offset-s1 left-align">
                                     <h1 style='font-size: 3.5em;'><strong>SMU World of Talent at Your Fingertips</strong></h1>
@@ -197,16 +206,12 @@
                                         line-height: 40px;">
                                         With a full understanding of the needs of university/industry collaboration, we make it easy for industry to find SMU researchers.</h6>
                                 </div>
-                                <div class="col s6 left-align">
-                                    @*                                        <img src='@routes.Assets.at("images/MATA.png")' class="responsive-img" style="width: 75%;*@
-                                    @*                                            height: 75%;*@
-                                    @*                                            margin-top: 1rem;">*@
-                                    <img src='@routes.Assets.at("images/red_home_smu.jpg")' class="responsive-img" style="width: 500px;
-                                        margin-top: 1rem;">
+                                <div class="col s6" style="display: flex; align-items: center; justify-content: center;">
+                                    <img src='@routes.Assets.at("images/red_home_smu.jpg")' class="responsive-img" style="max-width: 100%; height: auto; margin-top: 1rem; display: block;">
                                 </div>
                             </div>
                         </div>
-                        <div class="carousel-item white-text" href="#four!">
+                        <div class="carousel-item white-text" href="#four!" style="min-height: 500px; padding: 80px 0;">
                             <div class="row">
                                 <div class="col s5 offset-s1 left-align">
                                     <h1 style='font-size: 3.5em;'><strong>Window to SMU technology</strong></h1>
@@ -215,15 +220,12 @@
                                         line-height: 40px;">
                                         Help you understand the latest exciting technology invented by SMU faculty and students.</h6>
                                 </div>
-                                <div class="col s6 left-align">
-                                    @*                                        <img src='@routes.Assets.at("images/slider3.png")' style="width: 65%;*@
-                                    @*                                            height: 65%;">*@
-                                    <img src='@routes.Assets.at("images/research_day.jpg")' class="responsive-img" style="margin-top: 1rem;">
-
+                                <div class="col s6" style="display: flex; align-items: center; justify-content: center;">
+                                    <img src='@routes.Assets.at("images/research_day.jpg")' class="responsive-img" style="max-width: 100%; height: auto; margin-top: 1rem; display: block;">
                                 </div>
                             </div>
                         </div>
-                        <div class="carousel-item white-text" href="#five!">
+                        <div class="carousel-item white-text" href="#five!" style="min-height: 500px; padding: 80px 0;">
                             <div class="row">
                                 <div class="col s5 offset-s1 left-align">
                                     <h1 style='font-size: 3.5em;'><strong>A Community-Driven Hub</strong></h1>
@@ -232,14 +234,8 @@
                                         line-height: 40px;">
                                         Tell us your wishes, and we will update this portal for you.</h6>
                                 </div>
-                                <div class="col s6">
-                                    @*                                        <img src='@routes.Assets.at("images/community_support.png")' class="responsive-img" style="height: 50%;*@
-                                    @*                                            width: 50%;">*@
-                                    @*                                    </div>*@
-                                    <img src='@routes.Assets.at("images/collaboration_flat.png")' class="responsive-img" style="width: 60%;
-                                        height: 60%;
-                                        margin-top: 1rem;">
-
+                                <div class="col s6" style="display: flex; align-items: center; justify-content: center;">
+                                    <img src='@routes.Assets.at("images/collaboration_flat.png")' class="responsive-img" style="max-width: 100%; height: auto; margin-top: 1rem; display: block;">
                                 </div>
                             </div>
                         </div>
