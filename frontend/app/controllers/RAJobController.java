@@ -13,6 +13,7 @@ import models.RAJobApplication;
 import play.Logger;
 import play.data.Form;
 import play.data.FormFactory;
+import play.filters.csrf.AddCSRFToken;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Http;
@@ -1010,6 +1011,7 @@ public class RAJobController extends Controller {
      * @return schedule interview form page
      */
     @With(OperationLoggingAction.class)
+    @AddCSRFToken
     public Result showScheduleInterviewForm(Long raJobApplicationId) {
         Result loginCheck = checkLoginStatus();
         if (loginCheck.status() != Http.Status.OK) {
@@ -1178,6 +1180,7 @@ public class RAJobController extends Controller {
      * @return availability management page
      */
     @With(OperationLoggingAction.class)
+    @AddCSRFToken
     public Result manageAvailability() {
         Result loginCheck = checkLoginStatus();
         if (loginCheck.status() != Http.Status.OK) {
@@ -1287,6 +1290,7 @@ public class RAJobController extends Controller {
      * @return interview detail page
      */
     @With(OperationLoggingAction.class)
+    @AddCSRFToken
     public Result viewInterview(Long interviewId) {
         checkLoginStatus();
         try {
@@ -1320,6 +1324,7 @@ public class RAJobController extends Controller {
      * @return reschedule form page
      */
     @With(OperationLoggingAction.class)
+    @AddCSRFToken
     public Result rescheduleInterview(Long interviewId) {
         checkLoginStatus();
         try {
@@ -1439,6 +1444,7 @@ public class RAJobController extends Controller {
      * @return student response page
      */
     @With(OperationLoggingAction.class)
+    @AddCSRFToken
     public Result studentInterviewResponse(Long interviewId) {
         checkLoginStatus();
         try {

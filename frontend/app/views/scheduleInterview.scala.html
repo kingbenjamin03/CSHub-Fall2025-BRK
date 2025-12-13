@@ -100,7 +100,7 @@
                                 <h5>Existing Interviews</h5>
                                 @for(interview <- existingInterviews) {
                                     <div class="existing-interview">
-                                        <strong>Date & Time:</strong> @interview.getInterviewDate() @interview.getInterviewTime()<br>
+                                        <strong>Date & Time:</strong> @interview.getInterviewTime()<br>
                                         <strong>Status:</strong> @interview.getStatus()<br>
                                         @if(interview.getLocation() != null && !interview.getLocation().isEmpty()) {
                                             <strong>Location:</strong> @interview.getLocation()<br>
@@ -134,6 +134,7 @@
                     </div>
 
                     @helper.form(action = routes.RAJobController.scheduleInterviewPOST(application.getId()), 'class -> "col s12") {
+                        @helper.CSRF.formField
                         <div class="row">
                             <div class="input-field col s12 m6">
                                 <input type="text" id="interviewDateTime" name="interviewDateTime" class="validate" required>

@@ -71,7 +71,7 @@
                             </tr>
                             <tr>
                                 <th>Current Date & Time:</th>
-                                <td><strong>@interview.getInterviewDate() @interview.getInterviewTime()</strong></td>
+                                <td><strong>@interview.getInterviewTime()</strong></td>
                             </tr>
                             @if(interview.getLocation() != null && !interview.getLocation().isEmpty()) {
                                 <tr>
@@ -107,6 +107,7 @@
                     </div>
 
                     @helper.form(action = routes.RAJobController.rescheduleInterviewPOST(interview.getId()), 'class -> "col s12") {
+                        @helper.CSRF.formField
                         <div class="row">
                             <div class="input-field col s12 m6">
                                 <input type="text" id="newDateTime" name="newDateTime" class="validate" required>

@@ -70,7 +70,7 @@
                             </tr>
                             <tr>
                                 <th>Interview Date & Time:</th>
-                                <td>@interview.getInterviewDate() @interview.getInterviewTime()</td>
+                                <td>@interview.getInterviewTime()</td>
                             </tr>
                             @if(interview.getLocation() != null && !interview.getLocation().isEmpty()) {
                                 <tr>
@@ -101,6 +101,7 @@
                     </div>
 
                     @helper.form(action = routes.RAJobController.studentInterviewResponsePOST(interview.getId()), 'class -> "col s12") {
+                        @helper.CSRF.formField
                         <input type="hidden" id="responseInput" name="response" value="" required>
                         
                         <div class="row">

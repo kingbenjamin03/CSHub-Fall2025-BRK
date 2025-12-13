@@ -69,7 +69,7 @@
                             </tr>
                             <tr>
                                 <th>Interview Date & Time:</th>
-                                <td>@interview.getInterviewDate() @interview.getInterviewTime()</td>
+                                <td>@interview.getInterviewTime()</td>
                             </tr>
                             <tr>
                                 <th>Status:</th>
@@ -194,6 +194,7 @@
                 <h4>Cancel Interview</h4>
                 <p>Are you sure you want to cancel this interview? The applicant will be notified.</p>
                 @helper.form(action = routes.RAJobController.cancelInterview(interview.getId()), 'id -> "cancelForm") {
+                    @helper.CSRF.formField
                     <div class="row">
                         <div class="input-field col s12">
                             <textarea id="cancelReason" name="reason" class="materialize-textarea"></textarea>

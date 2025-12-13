@@ -90,6 +90,7 @@
                         <div class="col s12">
                             <h5>Add New Availability Slot</h5>
                             @helper.form(action = routes.RAJobController.manageAvailabilityPOST(), 'class -> "col s12") {
+                                @helper.CSRF.formField
                                 <input type="hidden" name="action" value="add">
                                 
                                 <div class="row">
@@ -156,7 +157,7 @@
                                 <p>These interviews are already scheduled and may conflict with availability slots.</p>
                                 @for(interview <- scheduledInterviews) {
                                     <div class="scheduled-interview">
-                                        <strong>Date & Time:</strong> @interview.getInterviewDate() @interview.getInterviewTime()<br>
+                                        <strong>Date & Time:</strong> @interview.getInterviewTime()<br>
                                         <strong>Applicant:</strong> @interview.getApplicant().getFirstName() @interview.getApplicant().getLastName()<br>
                                         <strong>Status:</strong> @interview.getStatus()<br>
                                         <a href="@routes.RAJobController.viewInterview(interview.getId())" class="btn-small waves-effect waves-light blue">View Details</a>
@@ -183,6 +184,7 @@
         <div class="modal-content">
             <h4>Edit Availability Slot</h4>
             @helper.form(action = routes.RAJobController.manageAvailabilityPOST(), 'class -> "col s12") {
+                @helper.CSRF.formField
                 <input type="hidden" name="action" value="update">
                 <input type="hidden" id="editSlotId" name="slotId" value="">
                 
@@ -209,6 +211,7 @@
 
     <!-- Delete Slot Form (hidden) -->
     @helper.form(action = routes.RAJobController.manageAvailabilityPOST(), 'id -> "deleteSlotForm", 'class -> "col s12") {
+        @helper.CSRF.formField
         <input type="hidden" name="action" value="delete">
         <input type="hidden" id="deleteSlotId" name="slotId" value="">
     }
