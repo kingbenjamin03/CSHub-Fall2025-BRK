@@ -32,12 +32,19 @@
     <script type="text/javascript">
         $(document).ready(function() {
             // Initialize Flatpickr for date and time
-            flatpickr("#newDateTime", {
+            const DISPLAY_FORMAT = "m/d/y H:i"; // MM/DD/YY HH:MM (24h)
+            function toIsoLike(dtStr) {
+                if (!dtStr) return dtStr;
+                return String(dtStr).trim().replace(" ", "T");
+            }
+
+            var newDatePicker = flatpickr("#newDateTime", {
                 enableTime: true,
-                dateFormat: "Y-m-d H:i",
+                dateFormat: DISPLAY_FORMAT,
                 time_24hr: true,
                 minDate: "today",
-                minuteIncrement: 15
+                minuteIncrement: 15,
+                allowInput: true
             });
 
             // Handle slot selection
@@ -45,7 +52,11 @@
                 $(".available-slot").removeClass("selected");
                 $(this).addClass("selected");
                 var slotStart = $(this).data("start");
-                $("#newDateTime").val(slotStart);
+                if (newDatePicker) {
+                    newDatePicker.setDate(toIsoLike(slotStart) || slotStart, true);
+                } else {
+                    $("#newDateTime").val(slotStart);
+                }
             });
         });
     </script>
@@ -111,7 +122,7 @@
                         <div class="row">
                             <div class="input-field col s12 m6">
                                 <input type="text" id="newDateTime" name="newDateTime" class="validate" required>
-                                <label for="newDateTime">New Interview Date & Time (YYYY-MM-DD HH:MM)</label>
+                                <label for="newDateTime">New Interview Date & Time (MM/DD/YY HH:MM)</label>
                             </div>
                         </div>
 

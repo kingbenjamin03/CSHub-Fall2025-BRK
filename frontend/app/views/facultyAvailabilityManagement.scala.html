@@ -26,46 +26,31 @@
     </style>
     <script type="text/javascript">
         $(document).ready(function() {
+            const DISPLAY_FORMAT = "m/d/y H:i"; // MM/DD/YY HH:MM (24h)
+
+            function toIsoLike(dtStr) {
+                if (!dtStr) return dtStr;
+                // Convert backend-ish "YYYY-MM-DD HH:mm:ss" -> "YYYY-MM-DDTHH:mm:ss" for reliable parsing.
+                return String(dtStr).trim().replace(" ", "T");
+            }
+
             // Initialize Flatpickr for date and time ranges
             flatpickr("#addStartTime", {
                 enableTime: true,
-                dateFormat: "Y-m-d H:i",
+                dateFormat: DISPLAY_FORMAT,
                 time_24hr: true,
-                minDate: "today"
+                minDate: "today",
+                minuteIncrement: 15,
+                allowInput: true
             });
 
             flatpickr("#addEndTime", {
                 enableTime: true,
-                dateFormat: "Y-m-d H:i",
+                dateFormat: DISPLAY_FORMAT,
                 time_24hr: true,
-                minDate: "today"
-            });
-
-            // Edit slot handlers
-            $(".edit-slot-btn").click(function() {
-                var slotId = $(this).data("slot-id");
-                var startTime = $(this).data("start-time");
-                var endTime = $(this).data("end-time");
-                
-                $("#editSlotId").val(slotId);
-                $("#editStartTime").val(startTime);
-                $("#editEndTime").val(endTime);
-                
-                flatpickr("#editStartTime", {
-                    enableTime: true,
-                    dateFormat: "Y-m-d H:i",
-                    time_24hr: true,
-                    minDate: "today"
-                });
-
-                flatpickr("#editEndTime", {
-                    enableTime: true,
-                    dateFormat: "Y-m-d H:i",
-                    time_24hr: true,
-                    minDate: "today"
-                });
-                
-                $("#editSlotModal").modal("open");
+                minDate: "today",
+                minuteIncrement: 15,
+                allowInput: true
             });
 
             $(".delete-slot-btn").click(function() {
@@ -86,6 +71,17 @@
                 <div class="card-panel">
                     <h4 class="center">Manage Your Availability</h4>
 
+                    @if(flash.contains("error")) {
+                        <div class="card-panel red lighten-5 red-text text-darken-4" style="padding: 10px; margin-top: 10px;">
+                            @flash.get("error")
+                        </div>
+                    }
+                    @if(flash.contains("success")) {
+                        <div class="card-panel green lighten-5 green-text text-darken-4" style="padding: 10px; margin-top: 10px;">
+                            @flash.get("success")
+                        </div>
+                    }
+
                     <div class="row">
                         <div class="col s12">
                             <h5>Add New Availability Slot</h5>
@@ -96,11 +92,11 @@
                                 <div class="row">
                                     <div class="input-field col s12 m5">
                                         <input type="text" id="addStartTime" name="startTime" class="validate" required>
-                                        <label for="addStartTime">Start Time (YYYY-MM-DD HH:MM)</label>
+                                        <label for="addStartTime">Start Time (MM/DD/YY HH:MM)</label>
                                     </div>
                                     <div class="input-field col s12 m5">
                                         <input type="text" id="addEndTime" name="endTime" class="validate" required>
-                                        <label for="addEndTime">End Time (YYYY-MM-DD HH:MM)</label>
+                                        <label for="addEndTime">End Time (MM/DD/YY HH:MM)</label>
                                     </div>
                                     <div class="input-field col s12 m2">
                                         <button type="submit" class="btn waves-effect waves-light green">
@@ -133,12 +129,6 @@
                                                     }
                                                 </div>
                                                 <div class="col s12 m4 right-align">
-                                                    <button class="btn-small waves-effect waves-light blue edit-slot-btn" 
-                                                            data-slot-id="@slot.getId()"
-                                                            data-start-time="@if(slot.getStartTime() != null) { @slot.getStartTime() } else { }"
-                                                            data-end-time="@if(slot.getEndTime() != null) { @slot.getEndTime() } else { }">
-                                                        Edit
-                                                    </button>
                                                     <button class="btn-small waves-effect waves-light red delete-slot-btn" 
                                                             data-slot-id="@slot.getId()">
                                                         Delete
@@ -189,36 +179,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Edit Slot Modal -->
-    <div id="editSlotModal" class="modal">
-        <div class="modal-content">
-            <h4>Edit Availability Slot</h4>
-            @helper.form(action = routes.RAJobController.manageAvailabilityPOST(), 'class -> "col s12") {
-                @helper.CSRF.formField
-                <input type="hidden" name="action" value="update">
-                <input type="hidden" id="editSlotId" name="slotId" value="">
-                
-                <div class="row">
-                    <div class="input-field col s12 m6">
-                        <input type="text" id="editStartTime" name="startTime" class="validate" required>
-                        <label for="editStartTime">Start Time (YYYY-MM-DD HH:MM)</label>
-                    </div>
-                    <div class="input-field col s12 m6">
-                        <input type="text" id="editEndTime" name="endTime" class="validate" required>
-                        <label for="editEndTime">End Time (YYYY-MM-DD HH:MM)</label>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col s12">
-                        <button type="submit" class="btn waves-effect waves-light blue">Update Slot</button>
-                        <a href="#!" class="modal-close btn waves-effect waves-light grey">Cancel</a>
-                    </div>
-                </div>
-            }
         </div>
     </div>
 

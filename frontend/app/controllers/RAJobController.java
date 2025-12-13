@@ -33,6 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.Arrays;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import static controllers.Application.checkLoginStatus;
 import static utils.Common.beginIndexForPagination;
@@ -1143,14 +1146,8 @@ public class RAJobController extends Controller {
                 return redirect(routes.RAJobController.showScheduleInterviewForm(raJobApplicationId));
             }
 
-            // UI uses "YYYY-MM-DD HH:MM" (flatpickr: "Y-m-d H:i"), backend expects seconds.
-            // Normalize common cases to "YYYY-MM-DD HH:MM:SS".
-            String dt = interviewDateTime.trim();
-            if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$", dt)) {
-                interviewDateTime = dt + ":00";
-            } else if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$", dt)) {
-                interviewDateTime = dt.replace('T', ' ') + ":00";
-            }
+            // UI can send either "MM/DD/YY HH:MM" or "YYYY-MM-DD HH:MM"; backend expects "yyyy-MM-dd HH:mm:ss"
+            interviewDateTime = normalizeDateTime(interviewDateTime);
 
             RAInterview interview = raInterviewService.scheduleInterview(
                     raJobApplicationId,
@@ -1172,6 +1169,52 @@ public class RAJobController extends Controller {
             Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
             return ok(editError.render("InterviewScheduling"));
         }
+    }
+
+    /**
+     * Normalize datetime strings from the UI into backend expected format: yyyy-MM-dd HH:mm:ss.
+     * Accepts common inputs:
+     * - "MM/dd/yy HH:mm" or "MM/dd/yy HH:mm:ss"
+     * - "MM/dd/yyyy HH:mm" or "MM/dd/yyyy HH:mm:ss"
+     * - "yyyy-MM-dd HH:mm" or "yyyy-MM-dd HH:mm:ss"
+     * - "yyyy-MM-ddTHH:mm" or "yyyy-MM-ddTHH:mm:ss"
+     */
+    private String normalizeDateTime(String input) {
+        if (input == null) {
+            return null;
+        }
+        String dt = input.trim();
+        if (dt.isEmpty()) {
+            return dt;
+        }
+
+        // Normalize ISO separator if present
+        dt = dt.replace('T', ' ');
+
+        final DateTimeFormatter backendFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        final DateTimeFormatter[] accepted = new DateTimeFormatter[] {
+                DateTimeFormatter.ofPattern("MM/dd/yy HH:mm:ss"),
+                DateTimeFormatter.ofPattern("MM/dd/yy HH:mm"),
+                DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm:ss"),
+                DateTimeFormatter.ofPattern("MM/dd/yyyy HH:mm"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        };
+
+        for (DateTimeFormatter f : accepted) {
+            try {
+                LocalDateTime ldt = LocalDateTime.parse(dt, f);
+                return ldt.format(backendFmt);
+            } catch (DateTimeParseException ignored) {
+                // try next
+            }
+        }
+
+        // Last-resort fallback: if seconds are missing for a yyyy-MM-dd HH:mm input, append ":00"
+        if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$", dt)) {
+            return dt + ":00";
+        }
+        return dt;
     }
 
     /**
@@ -1255,8 +1298,8 @@ public class RAJobController extends Controller {
             String action = form.field("action").value();
 
             if ("add".equals(action)) {
-                String startTime = form.field("startTime").value();
-                String endTime = form.field("endTime").value();
+                String startTime = normalizeDateTime(form.field("startTime").value());
+                String endTime = normalizeDateTime(form.field("endTime").value());
                 
                 if (startTime == null || endTime == null || startTime.isEmpty() || endTime.isEmpty()) {
                     Application.flashMsg("error", "Start time and end time are required.");
@@ -1272,8 +1315,8 @@ public class RAJobController extends Controller {
                 }
             } else if ("update".equals(action)) {
                 String slotIdStr = form.field("slotId").value();
-                String startTime = form.field("startTime").value();
-                String endTime = form.field("endTime").value();
+                String startTime = normalizeDateTime(form.field("startTime").value());
+                String endTime = normalizeDateTime(form.field("endTime").value());
                 
                 if (slotIdStr == null || startTime == null || endTime == null) {
                     Application.flashMsg("error", "Slot ID, start time, and end time are required.");
@@ -1393,7 +1436,7 @@ public class RAJobController extends Controller {
         checkLoginStatus();
         try {
             Form<?> form = myFactory.form().bindFromRequest();
-            String newDateTime = form.field("newDateTime").value();
+            String newDateTime = normalizeDateTime(form.field("newDateTime").value());
             String meetingLink = form.field("meetingLink").value();
             String location = form.field("location").value();
 
