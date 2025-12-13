@@ -3,6 +3,9 @@ version: '3.8'
 services:
   backend:
     image: cshub-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
     container_name: cshub-backend
     ports:
       - "9037:9037"
@@ -25,6 +28,9 @@ services:
 
   frontend:
     image: cshub-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
     container_name: cshub-frontend
     ports:
       - "9036:9036"

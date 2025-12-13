@@ -4,7 +4,7 @@ version := "1.6.1-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava).enablePlugins(PlayScala)
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.12"
 
 libraryDependencies += guice
 libraryDependencies += ws
@@ -38,7 +38,7 @@ libraryDependencies += "com.github.javaparser" % "javaparser-symbol-solver-core"
 // Make verbose tests
 testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a", "-v"))
 
-javaOptions ++= Seq("-Xmx2048M", "-Xms512M", "-XX:MaxPermSize=2048M")
+javaOptions ++= Seq("-Xmx2048M", "-Xms512M")
 
 sources in (Compile, doc) := Seq.empty
 

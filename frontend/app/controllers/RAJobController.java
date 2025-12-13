@@ -1019,29 +1019,73 @@ public class RAJobController extends Controller {
             String userId = session("id");
             String userTypes = session("userTypes");
             
+            // Check for null userId
+            if (userId == null || userId.isEmpty()) {
+                Logger.error("RAJobController.showScheduleInterviewForm() userId is null or empty");
+                return unauthorized("You must be logged in to schedule interviews.");
+            }
+            
             // Verify user is faculty (researcher)
-            if (userTypes == null || !userTypes.contains("1")) {
+            if (userTypes == null || userTypes.isEmpty() || !userTypes.contains("1")) {
+                Logger.debug("RAJobController.showScheduleInterviewForm() userTypes check failed. userTypes: " + userTypes);
                 return unauthorized("Only faculty members can schedule interviews.");
             }
 
             RAJobApplication application = rajobApplicationService.getRAJobApplicationById(raJobApplicationId);
             if (application == null) {
-                Logger.debug("RAJobController.showScheduleInterviewForm() application not found");
+                Logger.debug("RAJobController.showScheduleInterviewForm() application not found for ID: " + raJobApplicationId);
                 Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
                 return ok(generalError.render());
             }
 
             // Verify the current user is the faculty member (publisher of the RA job)
-            Long facultyId = Long.parseLong(userId);
-            if (application.getAppliedRAJob().getRajobPublisher().getId() != facultyId) {
+            Long facultyId;
+            try {
+                facultyId = Long.parseLong(userId);
+            } catch (NumberFormatException e) {
+                Logger.error("RAJobController.showScheduleInterviewForm() Invalid userId format: " + userId);
+                return unauthorized("Invalid user session. Please log in again.");
+            }
+            
+            if (application.getAppliedRAJob() == null) {
+                Logger.error("RAJobController.showScheduleInterviewForm() appliedRAJob is null for application ID: " + raJobApplicationId);
+                return unauthorized("Invalid application data. The RA job information is missing.");
+            }
+            
+            if (application.getAppliedRAJob().getRajobPublisher() == null) {
+                Logger.error("RAJobController.showScheduleInterviewForm() rajobPublisher is null for application ID: " + raJobApplicationId);
+                return unauthorized("Invalid application data. The job publisher information is missing.");
+            }
+            
+            long publisherId = application.getAppliedRAJob().getRajobPublisher().getId();
+            if (publisherId != facultyId) {
+                Logger.debug("RAJobController.showScheduleInterviewForm() Authorization failed. Publisher ID: " + publisherId + ", Faculty ID: " + facultyId);
                 return unauthorized("You can only schedule interviews for your own RA job postings.");
             }
 
             // Get faculty availability slots
-            List<FacultyAvailability> availabilitySlots = facultyAvailabilityService.getFacultyAvailability(facultyId);
+            List<FacultyAvailability> availabilitySlots = null;
+            try {
+                availabilitySlots = facultyAvailabilityService.getFacultyAvailability(facultyId);
+                if (availabilitySlots == null) {
+                    availabilitySlots = new ArrayList<>();
+                }
+            } catch (Exception e) {
+                Logger.error("RAJobController.showScheduleInterviewForm() Error getting availability slots: " + e.toString());
+                availabilitySlots = new ArrayList<>();
+            }
             
             // Get existing interviews for this application
-            List<RAInterview> existingInterviews = raInterviewService.getInterviewsByApplicationId(raJobApplicationId);
+            List<RAInterview> existingInterviews = null;
+            try {
+                existingInterviews = raInterviewService.getInterviewsByApplicationId(raJobApplicationId);
+                if (existingInterviews == null) {
+                    existingInterviews = new ArrayList<>();
+                }
+            } catch (Exception e) {
+                Logger.error("RAJobController.showScheduleInterviewForm() Error getting existing interviews: " + e.toString());
+                existingInterviews = new ArrayList<>();
+            }
 
             return ok(scheduleInterview.render(application, availabilitySlots, existingInterviews, facultyId));
         } catch (Exception e) {
@@ -1258,8 +1302,8 @@ public class RAJobController extends Controller {
 
             Long currentUserId = Long.parseLong(userId);
             boolean isFaculty = userTypes != null && userTypes.contains("1");
-            boolean isApplicant = interview.getApplicant().getId() == currentUserId;
-            boolean isOwner = isFaculty && interview.getFaculty().getId() == currentUserId;
+            boolean isApplicant = interview.getApplicant() != null && interview.getApplicant().getId() == currentUserId;
+            boolean isOwner = isFaculty && interview.getFaculty() != null && interview.getFaculty().getId() == currentUserId;
 
             return ok(interviewDetail.render(interview, currentUserId, isOwner, isApplicant));
         } catch (Exception e) {
@@ -1290,7 +1334,7 @@ public class RAJobController extends Controller {
             }
 
             // Verify user is the faculty member
-            if (interview.getFaculty().getId() != facultyId) {
+            if (interview.getFaculty() == null || interview.getFaculty().getId() != facultyId) {
                 return unauthorized("You can only reschedule your own interviews.");
             }
 
@@ -1332,7 +1376,10 @@ public class RAJobController extends Controller {
                 return redirect(routes.RAJobController.rescheduleInterview(interviewId));
             }
 
-            return ok(editConfirmation.render(interview.getRaJobApplication().getId(), interviewId, "InterviewRescheduled"));
+            Long applicationId = (interview.getRaJobApplication() != null) 
+                    ? interview.getRaJobApplication().getId() 
+                    : null;
+            return ok(editConfirmation.render(applicationId, interviewId, "InterviewRescheduled"));
         } catch (Exception e) {
             Logger.error("RAJobController.rescheduleInterviewPOST() exception: " + e.toString(), e);
             Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
@@ -1361,7 +1408,7 @@ public class RAJobController extends Controller {
             }
 
             // Verify user is the faculty member
-            if (interview.getFaculty().getId() != facultyId) {
+            if (interview.getFaculty() == null || interview.getFaculty().getId() != facultyId) {
                 return unauthorized("You can only cancel your own interviews.");
             }
 
@@ -1374,7 +1421,10 @@ public class RAJobController extends Controller {
                 return redirect(routes.RAJobController.viewInterview(interviewId));
             }
 
-            return ok(editConfirmation.render(interview.getRaJobApplication().getId(), interviewId, "InterviewCanceled"));
+            Long applicationId = (interview.getRaJobApplication() != null) 
+                    ? interview.getRaJobApplication().getId() 
+                    : null;
+            return ok(editConfirmation.render(applicationId, interviewId, "InterviewCanceled"));
         } catch (Exception e) {
             Logger.error("RAJobController.cancelInterview() exception: " + e.toString(), e);
             Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));

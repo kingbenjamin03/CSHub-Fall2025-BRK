@@ -13,6 +13,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
+@Table(name = "ra_interview")
 @Getter
 @Setter
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id", scope = RAInterview.class)

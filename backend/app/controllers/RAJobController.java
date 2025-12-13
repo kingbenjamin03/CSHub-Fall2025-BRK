@@ -444,7 +444,16 @@ public class RAJobController extends Controller {
         if (rajobApplicationId == 0) return ok(Json.toJson(null));  // jobId=0 means SMU-Sci-Hub job, not stored in DB
 
         try {
-            RAJobApplication rajobApplication = RAJobApplication.find.query().where().eq("id", rajobApplicationId).findOne();
+            RAJobApplication rajobApplication = RAJobApplication.find.query()
+                    .fetch("appliedRAJob")
+                    .fetch("appliedRAJob.rajobPublisher")
+                    .where().eq("id", rajobApplicationId).findOne();
+            
+            // Ensure relationships are loaded by accessing them
+            if (rajobApplication != null && rajobApplication.getAppliedRAJob() != null) {
+                rajobApplication.getAppliedRAJob().getRajobPublisher(); // Force load
+            }
+            
             return ok(Json.toJson(rajobApplication));
         } catch (Exception e) {
             Logger.debug("RAJobController.getRAJobApplicationById() exception : " + e.toString());

@@ -189,7 +189,13 @@ public class RAInterviewController extends Controller {
             }
 
             String newDateTimeStr = json.get("newDateTime").asText();
-            Date oldDateTime = interviewService.getInterviewById(interviewId).getInterviewTime();
+            RAInterview existingInterview = interviewService.getInterviewById(interviewId);
+            if (existingInterview == null) {
+                ObjectNode response = Json.newObject();
+                response.put("error", "Interview not found");
+                return notFound(response);
+            }
+            Date oldDateTime = existingInterview.getInterviewTime();
             Date newDateTime = DATE_FORMAT.parse(newDateTimeStr);
             String meetingLink = json.has("meetingLink") ? json.get("meetingLink").asText() : null;
             String location = json.has("location") ? json.get("location").asText() : null;

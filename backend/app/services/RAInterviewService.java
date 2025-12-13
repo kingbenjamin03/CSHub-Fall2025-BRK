@@ -7,6 +7,7 @@ import models.User;
 import play.Logger;
 
 import javax.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -39,7 +40,9 @@ public class RAInterviewService {
         }
 
         // Verify faculty is the publisher of the RA job
-        if (application.getAppliedRAJob().getRajobPublisher().getId() != facultyId) {
+        if (application.getAppliedRAJob() == null 
+                || application.getAppliedRAJob().getRajobPublisher() == null
+                || application.getAppliedRAJob().getRajobPublisher().getId() != facultyId) {
             Logger.error("RAInterviewService.createInterview: Faculty is not the publisher of this RA job");
             return null;
         }
@@ -76,7 +79,12 @@ public class RAInterviewService {
      * @return the interview, or null if not found
      */
     public RAInterview getInterviewById(Long interviewId) {
-        return RAInterview.find.byId(interviewId);
+        return RAInterview.find.query()
+                .fetch("faculty")
+                .fetch("applicant")
+                .fetch("raJobApplication")
+                .fetch("raJob")
+                .where().eq("id", interviewId).findOne();
     }
 
     /**
@@ -86,11 +94,20 @@ public class RAInterviewService {
      * @return list of interviews
      */
     public List<RAInterview> getInterviewsByApplicationId(Long raJobApplicationId) {
-        return RAInterview.find.query()
-                .where()
-                .eq("raJobApplication.id", raJobApplicationId)
-                .orderBy("interviewTime desc")
-                .findList();
+        try {
+            return RAInterview.find.query()
+                    .fetch("faculty")
+                    .fetch("applicant")
+                    .fetch("raJobApplication")
+                    .fetch("raJob")
+                    .where()
+                    .eq("rajob_application_id", raJobApplicationId)
+                    .orderBy("interviewTime desc")
+                    .findList();
+        } catch (Exception e) {
+            Logger.error("RAInterviewService.getInterviewsByApplicationId: Error querying interviews for application " + raJobApplicationId, e);
+            return new ArrayList<>();
+        }
     }
 
     /**
@@ -101,6 +118,10 @@ public class RAInterviewService {
      */
     public List<RAInterview> getInterviewsByFacultyId(Long facultyId) {
         return RAInterview.find.query()
+                .fetch("faculty")
+                .fetch("applicant")
+                .fetch("raJobApplication")
+                .fetch("raJob")
                 .where()
                 .eq("faculty.id", facultyId)
                 .orderBy("interviewTime desc")
@@ -115,6 +136,10 @@ public class RAInterviewService {
      */
     public List<RAInterview> getInterviewsByApplicantId(Long applicantId) {
         return RAInterview.find.query()
+                .fetch("faculty")
+                .fetch("applicant")
+                .fetch("raJobApplication")
+                .fetch("raJob")
                 .where()
                 .eq("applicant.id", applicantId)
                 .orderBy("interviewTime desc")
