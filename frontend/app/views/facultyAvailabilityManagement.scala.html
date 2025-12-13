@@ -119,32 +119,34 @@
                                 <p>No availability slots defined. Add slots above to make yourself available for interviews.</p>
                             } else {
                                 @for(slot <- availabilitySlots) {
-                                    <div class="availability-slot">
-                                        <div class="row">
-                                            <div class="col s12 m8">
-                                                <strong>Start:</strong> @slot.getStartTime()<br>
-                                                <strong>End:</strong> @slot.getEndTime()<br>
-                                                <strong>Status:</strong> 
-                                                @if(slot.getIsAvailable()) {
-                                                    <span class="green-text">Available</span>
-                                                } else {
-                                                    <span class="red-text">Unavailable</span>
-                                                }
-                                            </div>
-                                            <div class="col s12 m4 right-align">
-                                                <button class="btn-small waves-effect waves-light blue edit-slot-btn" 
-                                                        data-slot-id="@slot.getId()"
-                                                        data-start-time="@slot.getStartTime()"
-                                                        data-end-time="@slot.getEndTime()">
-                                                    Edit
-                                                </button>
-                                                <button class="btn-small waves-effect waves-light red delete-slot-btn" 
-                                                        data-slot-id="@slot.getId()">
-                                                    Delete
-                                                </button>
+                                    @if(slot != null) {
+                                        <div class="availability-slot">
+                                            <div class="row">
+                                                <div class="col s12 m8">
+                                                    <strong>Start:</strong> @if(slot.getStartTime() != null) { @slot.getStartTime() } else { N/A }<br>
+                                                    <strong>End:</strong> @if(slot.getEndTime() != null) { @slot.getEndTime() } else { N/A }<br>
+                                                    <strong>Status:</strong> 
+                                                    @if(slot.getIsAvailable()) {
+                                                        <span class="green-text">Available</span>
+                                                    } else {
+                                                        <span class="red-text">Unavailable</span>
+                                                    }
+                                                </div>
+                                                <div class="col s12 m4 right-align">
+                                                    <button class="btn-small waves-effect waves-light blue edit-slot-btn" 
+                                                            data-slot-id="@slot.getId()"
+                                                            data-start-time="@if(slot.getStartTime() != null) { @slot.getStartTime() } else { }"
+                                                            data-end-time="@if(slot.getEndTime() != null) { @slot.getEndTime() } else { }">
+                                                        Edit
+                                                    </button>
+                                                    <button class="btn-small waves-effect waves-light red delete-slot-btn" 
+                                                            data-slot-id="@slot.getId()">
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    }
                                 }
                             }
                         </div>
@@ -156,12 +158,23 @@
                                 <h5>Scheduled Interviews</h5>
                                 <p>These interviews are already scheduled and may conflict with availability slots.</p>
                                 @for(interview <- scheduledInterviews) {
-                                    <div class="scheduled-interview">
-                                        <strong>Date & Time:</strong> @interview.getInterviewTime()<br>
-                                        <strong>Applicant:</strong> @interview.getApplicant().getFirstName() @interview.getApplicant().getLastName()<br>
-                                        <strong>Status:</strong> @interview.getStatus()<br>
-                                        <a href="@routes.RAJobController.viewInterview(interview.getId())" class="btn-small waves-effect waves-light blue">View Details</a>
-                                    </div>
+                                    @if(interview != null) {
+                                        <div class="scheduled-interview">
+                                            <strong>Date & Time:</strong> @if(interview.getInterviewTime() != null) { @interview.getInterviewTime() } else { N/A }<br>
+                                            <strong>Applicant:</strong> 
+                                            @if(interview.getApplicant() != null) {
+                                                @if(interview.getApplicant().getFirstName() != null) { @interview.getApplicant().getFirstName() }
+                                                @if(interview.getApplicant().getLastName() != null) { @interview.getApplicant().getLastName() }
+                                            } else {
+                                                N/A
+                                            }
+                                            <br>
+                                            <strong>Status:</strong> @if(interview.getStatus() != null) { @interview.getStatus() } else { N/A }<br>
+                                            @if(interview.getId() > 0) {
+                                                <a href="@routes.RAJobController.viewInterview(interview.getId())" class="btn-small waves-effect waves-light blue">View Details</a>
+                                            }
+                                        </div>
+                                    }
                                 }
                             </div>
                         </div>

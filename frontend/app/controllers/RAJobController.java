@@ -1190,14 +1190,43 @@ public class RAJobController extends Controller {
             String userId = session("id");
             String userTypes = session("userTypes");
             
+            if (userId == null || userId.isEmpty()) {
+                Logger.error("RAJobController.manageAvailability() userId is null or empty");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+            
             // Verify user is faculty (researcher)
             if (userTypes == null || !userTypes.contains("1")) {
                 return unauthorized("Only faculty members can manage availability.");
             }
 
-            Long facultyId = Long.parseLong(userId);
+            Long facultyId;
+            try {
+                facultyId = Long.parseLong(userId);
+            } catch (NumberFormatException e) {
+                Logger.error("RAJobController.manageAvailability() invalid userId format: " + userId, e);
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+            
+            // Ensure services are not null (shouldn't happen with proper injection, but safety check)
+            if (facultyAvailabilityService == null || raInterviewService == null) {
+                Logger.error("RAJobController.manageAvailability() services are null");
+                Application.flashMsg(RESTfulCalls.createUserResponse(RESTfulCalls.UserResponseType.GENERALERROR));
+                return ok(generalError.render());
+            }
+            
             List<FacultyAvailability> availabilitySlots = facultyAvailabilityService.getFacultyAvailability(facultyId);
             List<RAInterview> scheduledInterviews = raInterviewService.getInterviewsByFacultyId(facultyId);
+            
+            // Ensure lists are not null (services should return empty lists, but safety check)
+            if (availabilitySlots == null) {
+                availabilitySlots = new ArrayList<>();
+            }
+            if (scheduledInterviews == null) {
+                scheduledInterviews = new ArrayList<>();
+            }
 
             return ok(facultyAvailabilityManagement.render(availabilitySlots, scheduledInterviews, facultyId));
         } catch (Exception e) {

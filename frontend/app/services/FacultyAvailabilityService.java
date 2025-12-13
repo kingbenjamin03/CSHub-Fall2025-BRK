@@ -28,6 +28,11 @@ public class FacultyAvailabilityService {
             JsonNode response = RESTfulCalls.getAPI(
                     RESTfulCalls.getBackendAPIUrl(config, "/faculty/availability/" + facultyId)
             );
+            if (response == null) {
+                Logger.debug("FacultyAvailabilityService.getFacultyAvailability() response is null");
+                return availabilityList;
+            }
+            
             if (response.has("error")) {
                 Logger.debug("FacultyAvailabilityService.getFacultyAvailability() error: " + response.get("error").asText());
                 return availabilityList;
@@ -35,9 +40,20 @@ public class FacultyAvailabilityService {
 
             if (response.isArray()) {
                 for (JsonNode node : response) {
-                    FacultyAvailability availability = FacultyAvailability.deserialize(node);
-                    availabilityList.add(availability);
+                    if (node != null && !node.isNull()) {
+                        try {
+                            FacultyAvailability availability = FacultyAvailability.deserialize(node);
+                            if (availability != null) {
+                                availabilityList.add(availability);
+                            }
+                        } catch (Exception e) {
+                            Logger.error("FacultyAvailabilityService.getFacultyAvailability() deserialize exception for node: " + e.toString(), e);
+                            // Continue with next node instead of failing completely
+                        }
+                    }
                 }
+            } else {
+                Logger.debug("FacultyAvailabilityService.getFacultyAvailability() response is not an array: " + response.toString());
             }
         } catch (Exception e) {
             Logger.error("FacultyAvailabilityService.getFacultyAvailability() exception: " + e.toString(), e);

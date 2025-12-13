@@ -124,6 +124,11 @@ public class RAInterviewService {
             JsonNode response = RESTfulCalls.getAPI(
                     RESTfulCalls.getBackendAPIUrl(config, "/rajob/interview/faculty/" + facultyId)
             );
+            if (response == null) {
+                Logger.debug("RAInterviewService.getInterviewsByFacultyId() response is null");
+                return interviewList;
+            }
+            
             if (response.has("error")) {
                 Logger.debug("RAInterviewService.getInterviewsByFacultyId() error: " + response.get("error").asText());
                 return interviewList;
@@ -131,9 +136,20 @@ public class RAInterviewService {
 
             if (response.isArray()) {
                 for (JsonNode node : response) {
-                    RAInterview interview = RAInterview.deserialize(node);
-                    interviewList.add(interview);
+                    if (node != null && !node.isNull()) {
+                        try {
+                            RAInterview interview = RAInterview.deserialize(node);
+                            if (interview != null) {
+                                interviewList.add(interview);
+                            }
+                        } catch (Exception e) {
+                            Logger.error("RAInterviewService.getInterviewsByFacultyId() deserialize exception for node: " + e.toString(), e);
+                            // Continue with next node instead of failing completely
+                        }
+                    }
                 }
+            } else {
+                Logger.debug("RAInterviewService.getInterviewsByFacultyId() response is not an array: " + response.toString());
             }
         } catch (Exception e) {
             Logger.error("RAInterviewService.getInterviewsByFacultyId() exception: " + e.toString(), e);
